@@ -53,6 +53,106 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ---
 
+## Dependências e requisitos de sistema
+
+Antes de rodar o projeto, certifique-se de ter as dependências corretas instaladas.
+
+### Requisitos globais
+
+- **Node.js** (v16+) — necessário para compilar o frontend. Instale de https://nodejs.org ou via package manager:
+  ```bash
+  # macOS (Homebrew)
+  brew install node
+
+  # Ubuntu/Debian
+  sudo apt-get install nodejs npm
+  ```
+
+- **npm** ou **bun** — gerenciador de pacotes JavaScript. Vem com Node.js. Se preferir Bun (mais rápido):
+  ```bash
+  curl -fsSL https://bun.sh/install | bash
+  ```
+
+- **Python 3.9+** — necessário para rodar o backend localmente. Instale de https://www.python.org ou via package manager:
+  ```bash
+  # macOS (Homebrew)
+  brew install python3
+
+  # Ubuntu/Debian
+  sudo apt-get install python3 python3-pip
+  ```
+
+- **Docker & Docker Compose** — recomendado para rodar os containers. Instale de https://docs.docker.com/get-docker ou via package manager:
+  ```bash
+  # macOS (Homebrew)
+  brew install docker
+
+  # Ubuntu/Debian
+  sudo apt-get install docker.io docker-compose
+  ```
+
+### Dependências do Frontend
+
+Instaladas via `npm install`, incluem:
+
+- **React 18** — framework de UI.
+- **TypeScript** — tipagem estática para JavaScript.
+- **Vite** — bundler e dev server.
+- **TailwindCSS** — framework de CSS utilitário.
+- **Radix UI** — componentes acessíveis sem estilo.
+- **shadcn/ui** — componentes de UI pré-estilizados baseados em Radix.
+- **React Router v6** — roteamento de página.
+- **TanStack Query v5** — gerenciamento de estado e cache de dados.
+- **next-themes** — alternador de tema (dark/light).
+- **sonner** — notificações toast.
+- **jspdf** e **jspdf-autotable** — geração de PDFs.
+- **lucide-react** — ícones SVG.
+- **vite-plugin-pwa** — suporte a PWA.
+
+Instale com:
+
+```bash
+npm install
+```
+
+Ou se usar Bun:
+
+```bash
+bun install
+```
+
+### Dependências do Backend
+
+Instaladas via `pip install -r requirements.txt`, incluem:
+
+- **FastAPI** — framework web assíncrono.
+- **Uvicorn** — servidor ASGI para FastAPI.
+- **SQLAlchemy** — ORM e construção de queries SQL.
+- **psycopg2** — driver PostgreSQL para Python.
+- **pydantic** e **pydantic-settings** — validação de dados e variáveis de ambiente.
+- **python-cors** — middleware CORS para APIs.
+
+Instale com:
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+### Verificação de instalação
+
+Verifique se tudo está instalado:
+
+```bash
+node --version      # v16+
+npm --version       # npm 8+
+python3 --version   # 3.9+
+docker --version    # Docker 20+
+docker-compose --version  # docker-compose 1.29+
+```
+
+---
+
 ## Estrutura do repositório (nível superior)
 
 - `deployment/` — arquivos Docker e NGINX usados para empacotar e servir o frontend e orquestrar serviços com `docker-compose`.
