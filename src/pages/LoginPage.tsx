@@ -4,14 +4,14 @@ import { HardHat, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!username || !password) {
       toast.error("Preencha todos os campos");
       return;
     }
@@ -19,22 +19,45 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const apiUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+      console.log("Login attempt to:", `${apiUrl}/api/login`);
+
       const res = await fetch(`${apiUrl}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password: password.trim() }),
+        body: JSON.stringify({ username: username.trim().toLowerCase(), password: password.trim() }),
       });
 
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        console.error("Failed to parse JSON:", jsonErr);
+        throw new Error("Resposta inválida do servidor");
+      }
+
+      console.log("Response status:", res.status);
+      console.log("Response data:", data);
 
       if (!res.ok) {
-        throw new Error(data.detail || "Erro ao fazer login");
+        const errorMsg = typeof data?.detail === "string" ? data.detail : "Erro ao fazer login";
+        throw new Error(errorMsg);
+      }
+
+      if (!data?.access_token) {
+        throw new Error("Token não recebido do servidor");
       }
 
       login(data.access_token);
       toast.success("Login realizado com sucesso");
     } catch (err: any) {
-      toast.error(err.message);
+      console.error("Login error:", err);
+      let errorMessage = "Erro ao fazer login";
+
+      if (typeof err?.message === "string") {
+        errorMessage = err.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -52,32 +75,30 @@ export default function LoginPage() {
             Plataforma de Análise Técnica
           </p>
         </div>
-        
+
         <div className="p-8">
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground block">
-                Email / Produtivo
+                Usuário
               </label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@deere.com"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full h-11 px-4 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none"
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground block">
-                Senha / Produtivo
+                Senha
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Sua senha ou produtivo"
                 className="w-full h-11 px-4 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none"
                 required
               />
@@ -100,7 +121,7 @@ export default function LoginPage() {
           </form>
         </div>
       </div>
-      
+
       <p className="text-muted-foreground text-sm mt-8">
         Uso exclusivo para técnicos autorizados.
       </p>

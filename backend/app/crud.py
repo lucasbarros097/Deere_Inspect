@@ -1,3 +1,4 @@
+import time
 from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update
@@ -56,13 +57,20 @@ def get_users(db: Session) -> list[models.User]:
     return db.scalars(select(models.User).order_by(models.User.criado_em.desc())).all()
 
 
-def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
-    return db.scalars(select(models.User).filter(models.User.email == email)).first()
+def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
+    return db.scalars(select(models.User).filter(models.User.username == username)).first()
 
 
 def create_user(db: Session, user: schemas.UserCreate, password_hash: str) -> models.User:
     user_data = user.dict(exclude={"password"})
-    db_user = models.User(**user_data, password_hash=password_hash)
+    db_user = models.User(
+        uid=user_data["uid"],
+        username=user_data["username"],
+        role=user_data["role"],
+        ativo=user_data["ativo"],
+        criado_em=int(time.time()),
+        password_hash=password_hash,
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

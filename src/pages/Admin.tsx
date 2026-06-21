@@ -11,7 +11,7 @@ type Role = "admin" | "user";
 
 interface UserData {
   uid: string;
-  email: string;
+  username: string;
   role: Role;
   ativo: boolean;
   criadoEm: number;
@@ -27,12 +27,13 @@ export default function Admin() {
   const [usersList, setUsersList] = useState<UserData[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
-  const [newEmail, setNewEmail] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState<Role>("user");
   const [isCreating, setIsCreating] = useState(false);
 
-  // States: Técnicos (email + produtivo)
-  const [tecEmail, setTecEmail] = useState("");
+  // States: Técnicos (username + produtivo)
+  const [tecUsername, setTecUsername] = useState("");
   const [tecProdutivo, setTecProdutivo] = useState("");
   const [isCreatingTec, setIsCreatingTec] = useState(false);
 
@@ -77,11 +78,11 @@ export default function Admin() {
     setLoadingUsers(true);
     setUsersError(null);
     try {
-      const data = await apiFetch<{ uid: string; email: string; role: string; ativo: boolean; criado_em: number; }[]>("/api/users");
+      const data = await apiFetch<{ uid: string; username: string; role: string; ativo: boolean; criado_em: number; }[]>("/api/users");
       const users = data
         .map((item) => ({
           uid: item.uid,
-          email: item.email,
+          username: item.username,
           role: item.role as Role,
           ativo: item.ativo,
           criadoEm: item.criado_em,
@@ -127,10 +128,10 @@ export default function Admin() {
 
   const handleCreateTecnico = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanEmail = tecEmail.trim().toLowerCase();
+    const cleanUsername = tecUsername.trim().toLowerCase();
     const cleanProd = tecProdutivo.trim();
-    if (!cleanEmail || !cleanProd) {
-      toast.error("Informe email e produtivo do técnico.");
+    if (!cleanUsername || !cleanProd) {
+      toast.error("Informe nome de usuário e produtivo do técnico.");
       return;
     }
     if (cleanProd.length < 2) {
@@ -142,25 +143,25 @@ export default function Admin() {
     try {
       const newUser = {
         uid: crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).substring(2)}`,
-        email: cleanEmail,
+        username: cleanUsername,
         role: "user" as Role,
         ativo: true,
       };
 
       await apiFetch(`/api/users`, {
         method: "POST",
-        body: JSON.stringify({ uid: newUser.uid, email: newUser.email, role: newUser.role, ativo: newUser.ativo }),
+        body: JSON.stringify({ uid: newUser.uid, username: newUser.username, password: cleanProd, role: newUser.role, ativo: newUser.ativo }),
       });
 
-      toast.success(`Técnico ${cleanEmail} cadastrado!`);
+      toast.success(`Técnico ${cleanUsername} cadastrado!`);
 
-      setTecEmail("");
+      setTecUsername("");
       setTecProdutivo("");
       fetchUsers();
     } catch (error: any) {
       const message = error?.message || "Erro desconhecido";
-      if (message.includes("Email already in use")) {
-        toast.error("Este e-mail já está cadastrado.");
+      if (message.includes("Nome de usuário já está em uso")) {
+        toast.error("Este nome de usuário já está cadastrado.");
       } else {
         toast.error("Erro ao cadastrar: " + message);
       }
@@ -180,8 +181,8 @@ export default function Admin() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newEmail) {
-      toast.error("Preencha o e-mail para criar usuário.");
+    if (!newUsername || !newPassword) {
+      toast.error("Preencha usuário e senha para criar usuário.");
       return;
     }
     
@@ -191,7 +192,8 @@ export default function Admin() {
         method: "POST",
         body: JSON.stringify({
           uid: crypto.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).substring(2)}`,
-          email: newEmail.trim().toLowerCase(),
+          username: newUsername.trim().toLowerCase(),
+          password: newPassword.trim(),
           role: newRole,
           ativo: true,
         }),
@@ -199,13 +201,14 @@ export default function Admin() {
 
       toast.success("Usuário criado com sucesso!");
       
-      setNewEmail("");
+      setNewUsername("");
+      setNewPassword("");
       setNewRole("user");
       fetchUsers();
     } catch (error: any) {
       const message = error?.message || "Erro desconhecido";
-      if (message.includes("Email already in use")) {
-        toast.error("Este e-mail já está em uso.");
+      if (message.includes("Nome de usuário já está em uso")) {
+        toast.error("Este nome de usuário já está em uso.");
       } else {
         toast.error("Erro ao criar usuário: " + message);
       }
@@ -322,22 +325,22 @@ export default function Admin() {
                 Cadastrar Técnico
               </h2>
               <p className="text-sm text-muted-foreground mb-4">
-                O técnico fará login com o <strong>email</strong> + <strong>produtivo</strong> abaixo. Permissão padrão: somente inspeções.
+                O técnico fará login com o <strong>nome de usuário</strong> + <strong>produtivo</strong> abaixo. Permissão padrão: somente inspeções.
               </p>
               <form onSubmit={handleCreateTecnico} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Email do técnico</label>
+                  <label className="text-sm font-medium text-muted-foreground">Nome de usuário</label>
                   <input
-                    type="email"
+                    type="text"
                     required
-                    value={tecEmail}
-                    onChange={(e) => setTecEmail(e.target.value)}
-                    placeholder="tecnico@deere.com"
+                    value={tecUsername}
+                    onChange={(e) => setTecUsername(e.target.value)}
+                    placeholder="usuario_tecnico"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Produtivo (login)</label>
+                  <label className="text-sm font-medium text-muted-foreground">Produtivo (senha)</label>
                   <input
                     type="text"
                     required
@@ -388,7 +391,7 @@ export default function Admin() {
                     <p><strong>Como instalar:</strong></p>
                     <p>1. Abra o link no celular (Chrome/Safari)</p>
                     <p>2. Toque em "Adicionar à tela inicial"</p>
-                    <p>3. Faça login com email + produtivo</p>
+                    <p>3. Faça login com nome de usuário + produtivo</p>
                   </div>
                 </div>
                 <div className="bg-white p-3 rounded-lg flex-shrink-0 mx-auto md:mx-0">
@@ -406,10 +409,14 @@ export default function Admin() {
                 <UserPlus className="h-5 w-5 text-primary" />
                 Adicionar Novo Usuário
               </h2>
-              <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div className="space-y-2 md:col-span-1">
-                  <label className="text-sm font-medium text-muted-foreground">E-mail</label>
-                  <input type="email" required value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="email@exemplo.com" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                  <label className="text-sm font-medium text-muted-foreground">Nome de usuário</label>
+                  <input type="text" required value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="usuario123" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                </div>
+                <div className="space-y-2 md:col-span-1">
+                  <label className="text-sm font-medium text-muted-foreground">Senha</label>
+                  <input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Produtivo ou senha" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
                 </div>
                 <div className="space-y-2 md:col-span-1">
                   <label className="text-sm font-medium text-muted-foreground">Permissão</label>
@@ -446,7 +453,7 @@ export default function Admin() {
                     <div key={u.uid} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border ${u.ativo ? 'bg-card border-border' : 'bg-destructive/5 border-destructive/20'} transition-all`}>
                       <div className="mb-3 sm:mb-0">
                         <p className={`font-medium flex items-center gap-2 ${u.ativo ? 'text-foreground' : 'text-muted-foreground line-through'}`}>
-                          {u.email}
+                          {u.username}
                         </p>
                         <p className="text-sm text-muted-foreground mt-1">
                           Role: <span className="font-semibold text-primary">{u.role.toUpperCase()}</span> • Status: <span className={u.ativo ? "text-green-500" : "text-destructive"}>{u.ativo ? "ATIVO" : "INATIVO"}</span> 

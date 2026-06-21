@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 
 
 class InspectionBase(BaseModel):
@@ -44,7 +44,7 @@ class InspectionResponse(InspectionCreate, InspectionBase):
 
 
 class UserBase(BaseModel):
-    email: EmailStr
+    username: str
     role: str = "user"
     ativo: bool = True
 
@@ -59,7 +59,11 @@ class UserUpdate(BaseModel):
     ativo: Optional[bool]
 
 
-class UserResponse(UserCreate, UserBase):
+class UserResponse(BaseModel):
+    uid: str
+    username: str
+    role: str
+    ativo: bool
     criado_em: int
 
     class Config:
@@ -76,9 +80,9 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    email: Optional[str] = None
+    username: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    username: str
     password: str

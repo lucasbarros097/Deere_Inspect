@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, Text, Boolean, BigInteger, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import synonym
 from sqlalchemy.sql import func
 
 from .database import Base
@@ -27,7 +28,7 @@ class User(Base):
     __tablename__ = "users"
 
     uid = Column(String, primary_key=True, index=True)
-    email = Column(String, unique=True, nullable=False)
+    username = Column(String, unique=True, nullable=False)
     role = Column(String, nullable=False, default="user")
     ativo = Column(Boolean, default=True, nullable=False)
     criado_em = Column(BigInteger, nullable=False)
