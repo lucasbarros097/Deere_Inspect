@@ -2,7 +2,8 @@ node_modules
 .env
 
 # Local Postgres data (deployment)
-deployment/data/postgres
+**/data/postgres/
+deployment/deployment/data/
 
 # Build / Vite
 dist
