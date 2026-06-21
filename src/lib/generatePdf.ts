@@ -250,7 +250,7 @@ export function generateInspectionPdf(inspection: Inspection) {
     sectionNum++;
 
     const colW = (pageW - margin * 2 - 10) / 2; 
-    let imgHeight = 50; 
+    const imgHeight = 50; 
     
     fotosPreenchidas.forEach((foto, i) => {
        const isLeft = i % 2 === 0;

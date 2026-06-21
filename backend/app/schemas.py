@@ -51,6 +51,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     uid: str
+    password: str
 
 
 class UserUpdate(BaseModel):
@@ -67,3 +68,17 @@ class UserResponse(UserCreate, UserBase):
 
 class NextRastreabilidadeResponse(BaseModel):
     next_rastreabilidade: int
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str

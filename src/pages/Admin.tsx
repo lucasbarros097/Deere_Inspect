@@ -47,15 +47,26 @@ export default function Admin() {
 
   const apiFetch = async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
     const url = `${API_BASE}${path}`;
+    const token = localStorage.getItem("access_token");
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+      ...(init.headers || {}),
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const response = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-      },
       ...init,
+      headers,
     });
 
     if (!response.ok) {
       const text = await response.text();
+      if (response.status === 401) {
+        localStorage.removeItem("access_token");
+        navigate("/login");
+      }
       throw new Error(text || `API request failed with status ${response.status}`);
     }
 

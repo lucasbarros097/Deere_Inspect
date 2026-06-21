@@ -17,7 +17,7 @@ const compressImage = (file: File): Promise<string> => {
       const img = new Image();
       img.src = event.target?.result as string;
       img.onload = () => {
-        const maxWidth = 800; // Resolução reduzida
+        const maxWidth = 1024; // Resolução reduzida
         const scaleSize = maxWidth / img.width;
         let width = img.width;
         let height = img.height;
@@ -34,7 +34,7 @@ const compressImage = (file: File): Promise<string> => {
         
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL("image/jpeg", 0.6)); // Compressão forte de JPEG
+          resolve(canvas.toDataURL("image/jpeg", 0.7)); // Compressão de JPEG de 70%
         } else {
           resolve(img.src);
         }
@@ -116,7 +116,7 @@ export function PhotosSection({ fotos, onChange }: PhotosSectionProps) {
     const mimeMatch = dataUrl.match(/^data:(image\/[^;]+);/);
     const mime = mimeMatch?.[1] || "image/jpeg";
     const ext = mime.split("/")[1] || "jpg";
-    const safeTitle = (foto.titulo || "foto").replace(/[^\w\-]+/g, "_");
+    const safeTitle = (foto.titulo || "foto").replace(/[^\w-]+/g, "_");
     const link = document.createElement("a");
     link.href = dataUrl;
     link.download = `${safeTitle}.${ext}`;

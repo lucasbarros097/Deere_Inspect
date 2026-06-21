@@ -31,6 +31,7 @@ class User(Base):
     role = Column(String, nullable=False, default="user")
     ativo = Column(Boolean, default=True, nullable=False)
     criado_em = Column(BigInteger, nullable=False)
+    password_hash = Column(String, nullable=True)
 
 
 class Counter(Base):

@@ -56,8 +56,13 @@ def get_users(db: Session) -> list[models.User]:
     return db.scalars(select(models.User).order_by(models.User.criado_em.desc())).all()
 
 
-def create_user(db: Session, user: schemas.UserCreate) -> models.User:
-    db_user = models.User(**user.dict())
+def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
+    return db.scalars(select(models.User).filter(models.User.email == email)).first()
+
+
+def create_user(db: Session, user: schemas.UserCreate, password_hash: str) -> models.User:
+    user_data = user.dict(exclude={"password"})
+    db_user = models.User(**user_data, password_hash=password_hash)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

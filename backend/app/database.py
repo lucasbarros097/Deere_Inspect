@@ -10,5 +10,11 @@ Base = declarative_base()
 
 def init_db() -> None:
     from . import models
+    from sqlalchemy import text
 
     Base.metadata.create_all(bind=engine)
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR NULL;"))
+    except Exception:
+        pass

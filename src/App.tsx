@@ -7,12 +7,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import SplashScreen from "@/components/SplashScreen";
 import NetworkStatusBar from "@/components/NetworkStatusBar";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { AuthProvider } from "@/store/AuthContext";
 
 import Index from "./pages/Index.tsx";
 import InspectionPage from "./pages/InspectionPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Admin from "./pages/Admin.tsx";
 import AdminGate from "./components/AdminGate";
+import LoginPage from "./pages/LoginPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -25,9 +28,10 @@ const AppRoutes = () => {
       <NetworkStatusBar />
       {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/inspecao/:id" element={<InspectionPage />} />
-        <Route path="/admin" element={<AdminGate><Admin /></AdminGate>} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="/inspecao/:id" element={<ProtectedRoute><InspectionPage /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><AdminGate><Admin /></AdminGate></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
@@ -42,7 +46,9 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AppRoutes />
+            <AuthProvider>
+              <AppRoutes />
+            </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
