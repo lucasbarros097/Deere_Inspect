@@ -1,14 +1,16 @@
 import { InspectionPhoto } from "@/types/inspection";
 import { Camera, Trash2, Image as ImageIcon, Download } from "lucide-react";
 import { useCallback, useRef } from "react";
+import { toast } from "sonner";
 
 interface PhotosSectionProps {
   fotos: InspectionPhoto[];
   onChange: (fotos: InspectionPhoto[]) => void;
+  isFinalized?: boolean;
 }
 
-// Utilitário para comprimir imagem e converter pra base64
-// Isso garante que o LocalStorage não exploda de tamanho.
+const MAX_PHOTOS = 10;
+
 const compressImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -17,7 +19,7 @@ const compressImage = (file: File): Promise<string> => {
       const img = new Image();
       img.src = event.target?.result as string;
       img.onload = () => {
-        const maxWidth = 1024; // Resolução reduzida
+        const maxWidth = 1024;
         const scaleSize = maxWidth / img.width;
         let width = img.width;
         let height = img.height;
@@ -31,10 +33,10 @@ const compressImage = (file: File): Promise<string> => {
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext("2d");
-        
+
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL("image/jpeg", 0.7)); // Compressão de JPEG de 70%
+          resolve(canvas.toDataURL("image/jpeg", 0.7));
         } else {
           resolve(img.src);
         }
@@ -45,7 +47,6 @@ const compressImage = (file: File): Promise<string> => {
   });
 };
 
-// Lê o arquivo original sem compressão (mantém qualidade total)
 const readOriginal = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -55,8 +56,7 @@ const readOriginal = (file: File): Promise<string> => {
   });
 };
 
-export function PhotosSection({ fotos, onChange }: PhotosSectionProps) {
-  // Guarda os originais em memória (não vão para o LocalStorage)
+export function PhotosSection({ fotos, onChange, isFinalized }: PhotosSectionProps) {
   const originaisRef = useRef<Record<string, string>>({});
 
   const handlePhotoUpload = useCallback(
@@ -64,8 +64,14 @@ export function PhotosSection({ fotos, onChange }: PhotosSectionProps) {
       const file = e.target.files?.[0];
       if (!file) return;
 
+      // Verifica limite
+      const fotosPreenchidas = fotos.filter((f) => f.url).length;
+      if (fotosPreenchidas >= MAX_PHOTOS) {
+        toast.error(`Limite de ${MAX_PHOTOS} fotos atingido`);
+        return;
+      }
+
       try {
-        // Salva o original em memória para download em alta qualidade
         const original = await readOriginal(file);
         const compressedBase64 = await compressImage(file);
         const novasFotos = [...fotos];
@@ -76,8 +82,7 @@ export function PhotosSection({ fotos, onChange }: PhotosSectionProps) {
         };
         onChange(novasFotos);
       } catch (error) {
-        console.error("Erro ao comprimir imagem:", error);
-        alert("Ocorreu um erro ao processar a imagem.");
+        toast.error("Erro ao processar imagem");
       }
     },
     [fotos, onChange]
@@ -112,7 +117,6 @@ export function PhotosSection({ fotos, onChange }: PhotosSectionProps) {
     const original = originaisRef.current[foto.id];
     const dataUrl = original || foto.url;
     if (!dataUrl) return;
-    // Detecta extensão a partir do mime
     const mimeMatch = dataUrl.match(/^data:(image\/[^;]+);/);
     const mime = mimeMatch?.[1] || "image/jpeg";
     const ext = mime.split("/")[1] || "jpg";
@@ -125,13 +129,29 @@ export function PhotosSection({ fotos, onChange }: PhotosSectionProps) {
     document.body.removeChild(link);
   }, []);
 
+  const fotosPreenchidas = fotos.filter((f) => f.url).length;
+
   return (
     <div className="space-y-6">
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-industrial-dark">Registro Fotográfico</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xl font-bold text-industrial-dark">
+            Registro Fotográfico
+          </h2>
+          <div className="bg-primary/10 text-primary px-3 py-1 rounded-lg text-sm font-semibold">
+            {fotosPreenchidas}/{MAX_PHOTOS}
+          </div>
+        </div>
         <p className="text-sm text-industrial-dark-foreground/70">
-          Adicione até 30 fotos das evidências e faça uma anotação sobre cada uma.
+          Adicione até {MAX_PHOTOS} fotos das evidências e faça uma anotação sobre cada uma.
         </p>
+        {fotosPreenchidas >= MAX_PHOTOS && (
+          <div className="mt-2 p-2 rounded-lg bg-destructive/10 border border-destructive/30">
+            <p className="text-xs font-medium text-destructive">
+              ⚠️ Limite de fotos atingido
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -140,58 +160,72 @@ export function PhotosSection({ fotos, onChange }: PhotosSectionProps) {
             key={foto.id}
             className="bg-card border border-border rounded-xl shadow-sm overflow-hidden flex flex-col"
           >
-            {/* Header / Título */}
             <div className="bg-muted px-4 py-2 flex justify-between items-center border-b border-border">
-              <span className="font-semibold text-sm text-foreground">{foto.titulo}</span>
+              <span className="font-semibold text-sm text-foreground">
+                {foto.titulo}
+              </span>
               {foto.url && (
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => downloadPhoto(foto)}
                     className="text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors"
-                    title={originaisRef.current[foto.id] ? "Baixar foto original (alta qualidade)" : "Baixar foto"}
+                    title="Baixar foto original"
                   >
                     <Download className="h-4 w-4" />
                   </button>
-                  <button
-                    onClick={() => removePhoto(index)}
-                    className="text-destructive hover:bg-destructive/10 p-1.5 rounded-md transition-colors"
-                    title="Remover Foto"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  {!isFinalized && (
+                    <button
+                      onClick={() => removePhoto(index)}
+                      className="text-destructive hover:bg-destructive/10 p-1.5 rounded-md transition-colors"
+                      title="Remover Foto"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Content / Camera Img */}
             <div className="flex-1 flex flex-col">
               {!foto.url ? (
                 <div className="h-48 bg-muted/30 flex border-b border-border">
-                  <label className="relative flex-1 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors border-r border-border">
-                    <Camera className="h-7 w-7 text-industrial-dark-foreground/40 mb-1" />
-                    <p className="text-xs font-medium text-industrial-dark-foreground/60">
-                      Tirar Foto
-                    </p>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      onChange={(e) => handlePhotoUpload(index, e)}
-                    />
-                  </label>
-                  <label className="relative flex-1 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors">
-                    <ImageIcon className="h-7 w-7 text-industrial-dark-foreground/40 mb-1" />
-                    <p className="text-xs font-medium text-industrial-dark-foreground/60">
-                      Galeria
-                    </p>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      onChange={(e) => handlePhotoUpload(index, e)}
-                    />
-                  </label>
+                  {!isFinalized && fotosPreenchidas < MAX_PHOTOS ? (
+                    <>
+                      <label className="relative flex-1 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors border-r border-border">
+                        <Camera className="h-7 w-7 text-industrial-dark-foreground/40 mb-1" />
+                        <p className="text-xs font-medium text-industrial-dark-foreground/60">
+                          Tirar Foto
+                        </p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          onChange={(e) => handlePhotoUpload(index, e)}
+                        />
+                      </label>
+                      <label className="relative flex-1 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors">
+                        <ImageIcon className="h-7 w-7 text-industrial-dark-foreground/40 mb-1" />
+                        <p className="text-xs font-medium text-industrial-dark-foreground/60">
+                          Galeria
+                        </p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          onChange={(e) => handlePhotoUpload(index, e)}
+                        />
+                      </label>
+                    </>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center">
+                      <p className="text-xs text-muted-foreground text-center px-2">
+                        {isFinalized
+                          ? "Inspeção finalizada - fotos não podem ser alteradas"
+                          : "Limite de fotos atingido"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="relative h-48 border-b border-border bg-black">
@@ -203,14 +237,14 @@ export function PhotosSection({ fotos, onChange }: PhotosSectionProps) {
                 </div>
               )}
 
-              {/* Textarea para observação */}
               <div className="p-3 bg-card">
                 <textarea
-                  className="w-full p-2 text-sm bg-background border border-input rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full p-2 text-sm bg-background border border-input rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
                   rows={2}
                   placeholder="Adicionar observação..."
                   value={foto.observacao}
                   onChange={(e) => handleObservationChange(index, e.target.value)}
+                  disabled={isFinalized}
                 />
               </div>
             </div>

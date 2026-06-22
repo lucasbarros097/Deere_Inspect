@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllInspections } from "@/store/inspectionStore";
-import { Inspection, EQUIPMENT_LABELS } from "@/types/inspection";
 import { toast } from "sonner";
-import { ShieldCheck, ArrowLeft, UserPlus, Users, Power, PowerOff, FileText, Search, Download, HardHat, Link2, Copy, Smartphone } from "lucide-react";
-import { generateInspectionPdf } from "@/lib/generatePdf";
+import { ShieldCheck, ArrowLeft, UserPlus, Users, Power, PowerOff, Link2, Copy, Smartphone, HardHat } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 type Role = "admin" | "user";
@@ -17,12 +14,11 @@ interface UserData {
   criadoEm: number;
 }
 
-const PRODUCTIVE_SUFFIX = "@deere";
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState<"tecnicos" | "usuarios" | "inspecoes">("tecnicos");
-  
+  const [activeTab, setActiveTab] = useState<"tecnicos" | "usuarios">("tecnicos");
+
   // States: Users
   const [usersList, setUsersList] = useState<UserData[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -37,13 +33,7 @@ export default function Admin() {
   const [tecProdutivo, setTecProdutivo] = useState("");
   const [isCreatingTec, setIsCreatingTec] = useState(false);
 
-  // States: Inspections
-  const [inspectionsList, setInspectionsList] = useState<Inspection[]>([]);
-  const [loadingInspections, setLoadingInspections] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
   const navigate = useNavigate();
-
   const installUrl = typeof window !== "undefined" ? window.location.origin : "";
 
   const apiFetch = async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
@@ -102,28 +92,8 @@ export default function Admin() {
     }
   };
 
-  const fetchInspections = async () => {
-    setLoadingInspections(true);
-    try {
-      const localInspections = getAllInspections().sort((a, b) => {
-        if (a.status === "finalizada" && b.status !== "finalizada") return -1;
-        if (a.status !== "finalizada" && b.status === "finalizada") return 1;
-        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-      });
-      setInspectionsList(localInspections);
-    } catch (error) {
-      toast.error("Erro ao buscar inspeções salvas.");
-    } finally {
-      setLoadingInspections(false);
-    }
-  };
-
   useEffect(() => {
-    if (activeTab === "usuarios" || activeTab === "tecnicos") {
-      fetchUsers();
-    } else {
-      fetchInspections();
-    }
+    fetchUsers();
   }, [activeTab]);
 
   const handleCreateTecnico = async (e: React.FormEvent) => {
@@ -185,7 +155,7 @@ export default function Admin() {
       toast.error("Preencha usuário e senha para criar usuário.");
       return;
     }
-    
+
     setIsCreating(true);
     try {
       await apiFetch(`/api/users`, {
@@ -200,7 +170,7 @@ export default function Admin() {
       });
 
       toast.success("Usuário criado com sucesso!");
-      
+
       setNewUsername("");
       setNewPassword("");
       setNewRole("user");
@@ -251,27 +221,6 @@ export default function Admin() {
     }
   };
 
-  const filteredInspections = inspectionsList.filter((insp) => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return true;
-    const h = insp.header;
-    const rastreabilidadeStr = h.rastreabilidade ? String(h.rastreabilidade) : "";
-    const rastreabilidadePadded = h.rastreabilidade
-      ? String(h.rastreabilidade).padStart(5, "0")
-      : "";
-    const osStr = h.numeroOs ? String(h.numeroOs).toLowerCase() : "";
-    const osDigits = osStr.replace(/\D/g, "");
-    const qDigits = q.replace(/\D/g, "");
-    return (
-      (osStr && osStr.includes(q)) ||
-      (qDigits && osDigits && osDigits.includes(qDigits)) ||
-      (h.cliente && h.cliente.toLowerCase().includes(q)) ||
-      (rastreabilidadeStr && rastreabilidadeStr.includes(q)) ||
-      (rastreabilidadePadded && rastreabilidadePadded.includes(q)) ||
-      (h.numeroSerie && h.numeroSerie.toLowerCase().includes(q))
-    );
-  });
-
   return (
     <div className="min-h-screen bg-background">
       <header className="px-4 py-5 border-b border-border bg-card">
@@ -285,7 +234,7 @@ export default function Admin() {
               Painel de Administração
             </h1>
             <p className="text-sm text-muted-foreground">
-              Gerencie acessos e visualize os relatórios globais.
+              Gerencie acessos e usuários do sistema.
             </p>
           </div>
         </div>
@@ -294,29 +243,23 @@ export default function Admin() {
       {/* Tabs */}
       <div className="border-b border-border bg-card">
         <div className="container max-w-4xl mx-auto px-4 flex gap-4 overflow-x-auto">
-          <button 
+          <button
             onClick={() => setActiveTab("tecnicos")}
             className={`py-3 px-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === 'tecnicos' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
           >
             Cadastrar Técnico
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab("usuarios")}
             className={`py-3 px-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === 'usuarios' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
           >
             Controle de Usuários
           </button>
-          <button 
-            onClick={() => setActiveTab("inspecoes")}
-            className={`py-3 px-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === 'inspecoes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
-          >
-            Central de Inspeções
-          </button>
         </div>
       </div>
 
       <main className="container max-w-4xl mx-auto px-4 py-8 space-y-8 animate-in fade-in duration-500">
-        
+
         {activeTab === "tecnicos" && (
           <>
             <section className="bg-card border border-border rounded-xl p-6 shadow-sm">
@@ -433,10 +376,10 @@ export default function Admin() {
 
             <section>
               <h2 className="text-lg font-semibold flex items-center gap-2 text-foreground mb-4">
-                 <Users className="h-5 w-5 text-primary" />
-                 Usuários Registrados
+                <Users className="h-5 w-5 text-primary" />
+                Usuários Registrados
               </h2>
-              
+
               {loadingUsers ? (
                 <p className="text-sm text-muted-foreground">Carregando usuários...</p>
               ) : usersError ? (
@@ -456,15 +399,15 @@ export default function Admin() {
                           {u.username}
                         </p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Role: <span className="font-semibold text-primary">{u.role.toUpperCase()}</span> • Status: <span className={u.ativo ? "text-green-500" : "text-destructive"}>{u.ativo ? "ATIVO" : "INATIVO"}</span> 
+                          Role: <span className="font-semibold text-primary">{u.role.toUpperCase()}</span> • Status: <span className={u.ativo ? "text-green-500" : "text-destructive"}>{u.ativo ? "ATIVO" : "INATIVO"}</span>
                         </p>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
                         <button onClick={() => handleToggleRole(u)} className="px-3 py-1.5 text-xs font-semibold bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded transition-colors">
                           Tornar {u.role === 'admin' ? 'User' : 'Admin'}
                         </button>
-                        
+
                         <button onClick={() => handleToggleAtivo(u)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded transition-colors ${u.ativo ? 'bg-destructive/10 text-destructive' : 'bg-green-500/10 text-green-600 dark:text-green-400'}`}>
                           {u.ativo ? <PowerOff className="h-3 w-3" /> : <Power className="h-3 w-3" />}
                           {u.ativo ? "Bloquear" : "Ativar"}
@@ -477,73 +420,6 @@ export default function Admin() {
             </section>
           </>
         )}
-
-        {activeTab === "inspecoes" && (
-          <section>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-               <h2 className="text-lg font-semibold flex items-center gap-2 text-foreground">
-                 <FileText className="h-5 w-5 text-primary" />
-                 Inspeções Salvas
-               </h2>
-               
-               <div className="relative w-full sm:w-auto">
-                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                 <input 
-                   type="text" 
-                   placeholder="Pesquisar OS, Tracker, Cliente..."
-                   value={searchQuery}
-                   onChange={(e) => setSearchQuery(e.target.value)}
-                   className="pl-9 pr-4 py-2 w-full sm:w-[300px] border border-border bg-card rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                 />
-               </div>
-            </div>
-
-            {loadingInspections ? (
-               <p className="text-sm text-muted-foreground">Carregando inspeções salvas...</p>
-            ) : filteredInspections.length === 0 ? (
-              <div className="p-8 text-center bg-card border border-border rounded-lg">
-                  <p className="text-muted-foreground">Nenhuma inspeção finalizada ou em andamento foi encontrada.</p>
-              </div>
-            ) : (
-              <div className="grid gap-3">
-                {filteredInspections.map((insp) => (
-                  <div key={insp.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border bg-card border-border hover:border-primary transition-colors">
-                    <div className="mb-3 sm:mb-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-bold">
-                           TRK: {insp.header.rastreabilidade ? String(insp.header.rastreabilidade).padStart(5, '0') : 'N/A'}
-                        </span>
-                        {insp.header.numeroOs && (
-                          <span className="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-bold">
-                             OS: {insp.header.numeroOs}
-                          </span>
-                        )}
-                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${insp.status === "finalizada" ? "bg-status-ok-bg text-foreground" : "bg-status-warning-bg text-foreground"}`}>
-                           {insp.status === "finalizada" ? "Finalizada" : "Em andamento"}
-                        </span>
-                      </div>
-                      <p className="font-medium text-foreground">
-                        {insp.header.cliente || "Cliente não informado"} — {EQUIPMENT_LABELS[insp.header.tipoEquipamento]}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-0.5">
-                        Téc: {insp.header.tecnicoResponsavel || "Não inf."} • Data: {insp.header.data}
-                      </p>
-                    </div>
-                    
-                    <button 
-                      onClick={() => generateInspectionPdf(insp)}
-                      className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium text-sm"
-                    >
-                      <Download className="h-4 w-4" />
-                      Baixar PDF
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
       </main>
     </div>
   );

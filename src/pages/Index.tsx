@@ -2,16 +2,19 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { EquipmentType, EQUIPMENT_LABELS } from "@/types/inspection";
 import { createNewInspection, saveInspection, getAllInspections, deleteInspection } from "@/store/inspectionStore";
-import { BookOpenCheck, ClipboardList, Plus, Download, Trash2, ShieldCheck } from "lucide-react";
+import { BookOpenCheck, ClipboardList, CheckCircle, Plus, Download, Trash2, ShieldCheck, LogOut, Key } from "lucide-react";
+import { useAuth } from "@/store/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import NotificationBell from "@/components/NotificationBell";
+import { toast } from "sonner";
 
-const SwipeableInspectionItem = ({ 
-  insp, 
-  onNavigate, 
-  onDelete 
-}: { 
-  insp: any; 
-  onNavigate: (id: string) => void; 
+const SwipeableInspectionItem = ({
+  insp,
+  onNavigate,
+  onDelete
+}: {
+  insp: any;
+  onNavigate: (id: string) => void;
   onDelete: (id: string) => void;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -98,18 +101,17 @@ const SwipeableInspectionItem = ({
       >
         <div className="min-w-0 flex-1 pr-3">
           <p className="font-medium text-card-foreground truncate">
-            {insp.header.cliente || "Sem cliente"} — {EQUIPMENT_LABELS[insp.header.tipoEquipamento]}
+            {insp.header.cliente || "Sem cliente"} — {EQUIPMENT_LABELS[insp.header.tipoEquipamento as EquipmentType]}
           </p>
           <p className="text-sm text-muted-foreground truncate">
             {insp.header.marcaModelo || "Modelo não informado"} • Série: {insp.header.numeroSerie || "—"}
           </p>
         </div>
         <span
-          className={`text-xs px-2 py-1 rounded font-medium flex-shrink-0 ${
-            insp.status === "finalizada"
-              ? "bg-status-ok-bg text-foreground"
-              : "bg-status-warning-bg text-foreground"
-          }`}
+          className={`text-xs px-2 py-1 rounded font-medium flex-shrink-0 ${insp.status === "finalizada"
+            ? "bg-status-ok-bg text-foreground"
+            : "bg-status-warning-bg text-foreground"
+            }`}
         >
           {insp.status === "finalizada" ? "Finalizada" : "Em andamento"}
         </span>
@@ -120,10 +122,16 @@ const SwipeableInspectionItem = ({
 
 const Index = () => {
   const navigate = useNavigate();
+  const { role, username, logout } = useAuth();
   const [inspections, setInspections] = useState(getAllInspections());
-  const recentInspections = inspections.slice(-5).reverse();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Filtrando inspeções pelo usuário logado
+  const userInspections = inspections.filter(insp => insp.created_by === username || insp.header.tecnicoResponsavel === username);
+  const inProgressInspections = userInspections.filter(i => i.status !== "finalizada").reverse();
+  const finalizedInspections = userInspections.filter(i => i.status === "finalizada").reverse();
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -148,7 +156,7 @@ const Index = () => {
   };
 
   const handleNewInspection = (type: EquipmentType) => {
-    const inspection = createNewInspection(type, "");
+    const inspection = createNewInspection(type, username || "");
     saveInspection(inspection);
     navigate(`/inspecao/${inspection.id}`);
   };
@@ -156,6 +164,12 @@ const Index = () => {
   const handleDelete = (id: string) => {
     deleteInspection(id);
     setInspections(getAllInspections());
+  };
+
+  const handleLogout = () => {
+    setShowUserMenu(false);
+    logout();
+    toast.success("Você foi desconectado");
   };
 
   return (
@@ -175,15 +189,80 @@ const Index = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate("/admin")}
-                className="flex items-center gap-1.5 text-xs font-semibold px-2 py-1.5 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                title="Administração"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                <span className="hidden sm:inline">Admin</span>
-              </button>
+
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Notificações */}
+              <NotificationBell />
+
+              {/* Admin button - visível apenas para admins */}
+              {role === "admin" && (
+                <button
+                  onClick={() => navigate("/admin")}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-2 py-1.5 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  title="Painel de Administração"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  <span className="hidden sm:inline">Admin</span>
+                </button>
+              )}
+
+              {/* User menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors text-xs font-medium"
+                  title={`Usuário: ${username}`}
+                >
+                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold">
+                    {username ? username[0].toUpperCase() : "U"}
+                  </div>
+                  <span className="hidden sm:inline truncate max-w-[100px]">{username}</span>
+                </button>
+
+                {/* Dropdown menu */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden animate-in fade-in-0 zoom-in-95 origin-top-right duration-200">
+                    <div className="px-4 py-3 border-b border-border/50">
+                      <p className="text-xs text-muted-foreground">Conectado como</p>
+                      <p className="font-semibold text-foreground">{username}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {role === "admin" ? "👑 Administrador" : "👤 Usuário"}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        navigate("/sobre");
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors text-foreground"
+                    >
+                      <BookOpenCheck className="h-4 w-4 text-muted-foreground" />
+                      Sobre o App
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        navigate("/trocar-senha");
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors text-foreground"
+                    >
+                      <Key className="h-4 w-4 text-muted-foreground" />
+                      Trocar Senha
+                    </button>
+
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-destructive/10 transition-colors text-destructive"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sair
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <ThemeToggle />
             </div>
           </div>
@@ -209,7 +288,8 @@ const Index = () => {
       )}
 
       <main className="container max-w-4xl mx-auto px-4 py-6 space-y-8">
-        {/* New Inspection */}
+
+        {/* Seção 1: Nova Inspeção */}
         <section>
           <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <Plus className="h-5 w-5 text-primary" />
@@ -230,16 +310,15 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Recent */}
-        {recentInspections.length > 0 && (
+        {/* Seção 2: Inspeções em Andamento */}
+        {inProgressInspections.length > 0 && (
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-primary" />
-              Inspeções Recentes
+              <ClipboardList className="h-5 w-5 text-status-warning" />
+              Inspeções em Andamento
             </h2>
-            <p className="text-xs text-muted-foreground mb-2">← Arraste para o lado para excluir</p>
             <div className="space-y-2">
-              {recentInspections.map((insp) => (
+              {inProgressInspections.map((insp) => (
                 <SwipeableInspectionItem
                   key={insp.id}
                   insp={insp}
@@ -250,7 +329,36 @@ const Index = () => {
             </div>
           </section>
         )}
+
+        {/* Seção 3: Inspeções Finalizadas */}
+        {finalizedInspections.length > 0 && (
+          <section>
+            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-status-ok" />
+              Inspeções Finalizadas
+            </h2>
+            <div className="space-y-2">
+              {finalizedInspections.map((insp) => (
+                <SwipeableInspectionItem
+                  key={insp.id}
+                  insp={insp}
+                  onNavigate={(id) => navigate(`/inspecao/${id}`)}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
       </main>
+
+      {/* Close menu when clicking outside */}
+      {showUserMenu && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowUserMenu(false)}
+        />
+      )}
     </div>
   );
 };

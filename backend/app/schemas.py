@@ -17,6 +17,9 @@ class InspectionBase(BaseModel):
     fotos: List[Dict[str, Any]] = Field(default_factory=list)
     assinatura_tecnico: Optional[str] = ""
     status: str = "em-andamento"
+    shared_with: List[str] = Field(default_factory=list)
+    recycled_from: Optional[str] = None
+    recycled_by: Optional[str] = None
 
 
 class InspectionCreate(InspectionBase):
@@ -24,15 +27,16 @@ class InspectionCreate(InspectionBase):
 
 
 class InspectionUpdate(BaseModel):
-    header: Optional[Dict[str, Any]]
-    analysis_request: Optional[Dict[str, Any]]
-    operating_conditions: Optional[Dict[str, Any]]
-    diagnostico: Optional[Dict[str, Any]]
-    checklist_data: Optional[Dict[str, List[Dict[str, Any]]]]
-    kanban: Optional[List[Dict[str, Any]]]
-    fotos: Optional[List[Dict[str, Any]]]
-    assinatura_tecnico: Optional[str]
-    status: Optional[str]
+    header: Optional[Dict[str, Any]] = None
+    analysis_request: Optional[Dict[str, Any]] = None
+    operating_conditions: Optional[Dict[str, Any]] = None
+    diagnostico: Optional[Dict[str, Any]] = None
+    checklist_data: Optional[Dict[str, List[Dict[str, Any]]]] = None
+    kanban: Optional[List[Dict[str, Any]]] = None
+    fotos: Optional[List[Dict[str, Any]]] = None
+    assinatura_tecnico: Optional[str] = None
+    status: Optional[str] = None
+    edit_reason: Optional[str] = None  # Motivo da edição
 
 
 class InspectionResponse(InspectionCreate, InspectionBase):
@@ -40,7 +44,25 @@ class InspectionResponse(InspectionCreate, InspectionBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+class InspectionEditLog(BaseModel):
+    id: str
+    edited_by: str
+    edited_at: int
+    field_changed: str
+    old_value: Optional[str]
+    new_value: Optional[str]
+    edit_reason: Optional[str]
+
+
+class ShareInspectionRequest(BaseModel):
+    shared_with_uids: List[str]  # UIDs dos técnicos
+
+
+class RecycleInspectionRequest(BaseModel):
+    fields_to_keep: List[str]  # ["header", "fotos", "diagnostico"]
 
 
 class UserBase(BaseModel):
@@ -55,8 +77,8 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    role: Optional[str]
-    ativo: Optional[bool]
+    role: Optional[str] = None
+    ativo: Optional[bool] = None
 
 
 class UserResponse(BaseModel):
@@ -65,9 +87,21 @@ class UserResponse(BaseModel):
     role: str
     ativo: bool
     criado_em: int
+    must_change_password: bool = True
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+class NotificationResponse(BaseModel):
+    id: str
+    type: str
+    title: str
+    message: str
+    related_inspection_id: Optional[str]
+    related_user: Optional[str]
+    read: bool
+    created_at: int
 
 
 class NextRastreabilidadeResponse(BaseModel):
@@ -77,6 +111,8 @@ class NextRastreabilidadeResponse(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    must_change_password: bool = False
+    username: str = ""
 
 
 class TokenData(BaseModel):
@@ -86,3 +122,8 @@ class TokenData(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str

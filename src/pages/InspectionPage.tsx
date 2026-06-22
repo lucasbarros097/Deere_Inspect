@@ -12,7 +12,14 @@ import { KanbanSection } from "@/components/inspection/KanbanSection";
 import { PhotosSection } from "@/components/inspection/PhotosSection";
 import { SignatureSection } from "@/components/inspection/SignatureSection";
 import { getSectionsForEquipment } from "@/data/checklistSections";
-import { ArrowLeft, Save, ChevronRight } from "lucide-react";
+import { ArrowLeft, Save, ChevronRight, Share2, Recycle, History } from "lucide-react";
+import { useAuth } from "@/store/AuthContext";
+
+// Novos Modais
+import ShareModal from "@/components/ShareModal";
+import RecycleModal from "@/components/RecycleModal";
+import EditHistory from "@/components/EditHistory";
+import EditReasonDialog from "@/components/EditReasonDialog";
 
 type Tab = "dados" | "analise" | "condicoes" | "diagnostico" | "checklist" | "kanban" | "fotos" | "assinatura";
 
@@ -30,15 +37,25 @@ const TABS: { key: Tab; label: string }[] = [
 const InspectionPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { username } = useAuth();
+
   const [inspection, setInspection] = useState<Inspection | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("dados");
   const [saved, setSaved] = useState(false);
+
+  // Estados dos novos modais
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isRecycleModalOpen, setIsRecycleModalOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isEditReasonOpen, setIsEditReasonOpen] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState<Partial<Inspection> | null>(null);
+
+  const isFinalized = inspection?.status === "finalizada";
 
   useEffect(() => {
     if (id) {
       const data = getInspectionById(id);
       if (data) {
-        // Migrate old inspections missing diagnostico
         if (!data.diagnostico) {
           (data as any).diagnostico = {
             ferramentasUtilizadas: "SERVICE ADVISOR",
@@ -53,28 +70,55 @@ const InspectionPage = () => {
   }, [id, navigate]);
 
   useEffect(() => {
-    // Generate tracking number automatically if it's 0 
     if (inspection && inspection.header.rastreabilidade === 0 && navigator.onLine) {
-       getNextRastreabilidade().then(num => {
-           const updated = { ...inspection };
-           updated.header.rastreabilidade = num;
-           setInspection(updated);
-           saveInspection(updated);
-       });
+      getNextRastreabilidade().then(num => {
+        const updated = { ...inspection, header: { ...inspection.header, rastreabilidade: num } };
+        setInspection(updated);
+        saveInspection(updated);
+      });
     }
   }, [inspection?.header.rastreabilidade]);
+
+  const applyUpdate = (updates: Partial<Inspection>, reason?: string) => {
+    if (!inspection) return;
+    const updated = { ...inspection, ...updates };
+
+    if (reason) {
+      updated.editHistory = [
+        ...(updated.editHistory || []),
+        { date: Date.now(), reason, user: username || "Desconhecido" }
+      ];
+    }
+
+    setInspection(updated);
+    saveInspection(updated);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+  };
 
   const handleUpdate = useCallback(
     (updates: Partial<Inspection>) => {
       if (!inspection) return;
-      const updated = { ...inspection, ...updates };
-      setInspection(updated);
-      saveInspection(updated);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1500);
+
+      // Interceptando se for finalizada para pedir motivo da edição
+      if (isFinalized && updates.status !== "finalizada") {
+        setPendingUpdate(updates);
+        setIsEditReasonOpen(true);
+        return;
+      }
+
+      applyUpdate(updates);
     },
-    [inspection]
+    [inspection, isFinalized]
   );
+
+  const confirmEditReason = (reason: string) => {
+    setIsEditReasonOpen(false);
+    if (pendingUpdate) {
+      applyUpdate(pendingUpdate, reason);
+      setPendingUpdate(null);
+    }
+  };
 
   if (!inspection) return null;
 
@@ -88,19 +132,37 @@ const InspectionPage = () => {
             <ArrowLeft className="h-5 w-5" />
             <span className="text-sm font-medium hidden sm:inline">Voltar</span>
           </button>
-          <div className="text-center">
-            <p className="text-sm font-bold text-jd-yellow">
-              {EQUIPMENT_LABELS[inspection.header.tipoEquipamento]}
+
+          <div className="text-center flex-1 mx-2">
+            <p className="text-sm font-bold text-jd-yellow truncate">
+              {EQUIPMENT_LABELS[inspection.header.tipoEquipamento as EquipmentType]}
             </p>
-            <p className="text-xs text-industrial-dark-foreground/60">
+            <p className="text-xs text-industrial-dark-foreground/60 truncate">
               {inspection.header.cliente || "Nova inspeção"}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-3">
             {saved && (
-              <span className="text-xs text-status-ok animate-pulse-warning">Salvo ✓</span>
+              <span className="text-xs text-status-ok animate-pulse-warning hidden sm:inline">Salvo ✓</span>
             )}
-            <Save className="h-5 w-5 text-industrial-dark-foreground/50" />
+
+            {/* Botões do Topo */}
+            <div className="flex gap-1.5">
+              <button onClick={() => setIsHistoryOpen(true)} className="p-1.5 bg-secondary hover:bg-secondary/80 text-foreground rounded transition-colors" title="Histórico">
+                <History className="h-4 w-4" />
+              </button>
+              {isFinalized && (
+                <>
+                  <button onClick={() => setIsShareModalOpen(true)} className="p-1.5 bg-secondary hover:bg-secondary/80 text-foreground rounded transition-colors" title="Compartilhar">
+                    <Share2 className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => setIsRecycleModalOpen(true)} className="p-1.5 bg-secondary hover:bg-secondary/80 text-foreground rounded transition-colors" title="Aproveitar">
+                    <Recycle className="h-4 w-4" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -112,11 +174,10 @@ const InspectionPage = () => {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors touch-target flex-none ${
-                activeTab === tab.key
+              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors touch-target flex-none ${activeTab === tab.key
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               {tab.label}
             </button>
@@ -129,6 +190,7 @@ const InspectionPage = () => {
           <InspectionHeader
             header={inspection.header}
             onChange={(header) => handleUpdate({ header })}
+            isFinalized={isFinalized}
           />
         )}
         {activeTab === "analise" && (
@@ -178,6 +240,7 @@ const InspectionPage = () => {
           <PhotosSection
             fotos={inspection.fotos || []}
             onChange={(fotos) => handleUpdate({ fotos })}
+            isFinalized={isFinalized}
           />
         )}
         {activeTab === "assinatura" && (
@@ -214,6 +277,17 @@ const InspectionPage = () => {
           </button>
         </div>
       </main>
+
+      {/* Modais Integrados */}
+      {isShareModalOpen && <ShareModal inspection={inspection} onClose={() => setIsShareModalOpen(false)} />}
+      {isRecycleModalOpen && <RecycleModal inspection={inspection} onClose={() => setIsRecycleModalOpen(false)} />}
+      {isHistoryOpen && <EditHistory inspection={inspection} onClose={() => setIsHistoryOpen(false)} />}
+      {isEditReasonOpen && (
+        <EditReasonDialog
+          onConfirm={confirmEditReason}
+          onCancel={() => { setIsEditReasonOpen(false); setPendingUpdate(null); }}
+        />
+      )}
     </div>
   );
 };

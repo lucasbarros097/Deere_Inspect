@@ -16,6 +16,8 @@ import NotFound from "./pages/NotFound.tsx";
 import Admin from "./pages/Admin.tsx";
 import AdminGate from "./components/AdminGate";
 import LoginPage from "./pages/LoginPage.tsx";
+import ChangePasswordPage from "./pages/ChangePasswordPage.tsx";
+import AboutPage from "./pages/AboutPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +31,9 @@ const AppRoutes = () => {
       {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/trocar-senha" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="/sobre" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />
         <Route path="/inspecao/:id" element={<ProtectedRoute><InspectionPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminGate><Admin /></AdminGate></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
