@@ -120,7 +120,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/20 mb-4">
             <HardHat className="h-10 w-10 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-gradient">Deere Inspect Pro</h1>
+          <h1 className="text-3xl font-bold text-gradient">Deere Inspect</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Plataforma de Análise Técnica
           </p>
