@@ -1,8 +1,6 @@
-# 🚜 Deere Inspect Pro
+# 🚜 Deere Inspect
 
-**Plataforma de Análise Técnica para Equipamentos Linha Amarela John Deere**
-
-Sistema completo para registro, gerenciamento e compartilhamento de inspeções técnicas (TA) de equipamentos de construção. Desenvolvido com React + Vite + Tailwind CSS (frontend) e Python FastAPI (backend).
+**Sistema completo para registro, gerenciamento e compartilhamento de inspeções técnicas (TA) de equipamentos de construção. Desenvolvido com React + Vite + Tailwind CSS (frontend) e Python FastAPI (backend).**
 
 ---
 
