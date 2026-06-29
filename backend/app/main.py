@@ -176,6 +176,17 @@ def read_inspections(
     return crud.get_inspections_for_user(db, current_user.username)
 
 
+@api_router.get("/inspections/all", response_model=list[schemas.InspectionResponse])
+def read_all_inspections(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """Retorna TODAS as inspeções (apenas admin)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Permissão negada")
+    return crud.get_all_inspections(db)
+
+
 @api_router.get("/inspections/{inspection_id}", response_model=schemas.InspectionResponse)
 def read_inspection(
     inspection_id: str,
@@ -186,8 +197,8 @@ def read_inspection(
     if inspection is None:
         raise HTTPException(status_code=404, detail="Inspection not found")
     
-    # Verifica se o usuário tem acesso
-    if inspection.created_by != current_user.username and current_user.username not in (inspection.shared_with or []):
+    # Verifica se o usuário tem acesso (dono, compartilhado ou admin)
+    if current_user.role != "admin" and inspection.created_by != current_user.username and current_user.username not in (inspection.shared_with or []):
         raise HTTPException(status_code=403, detail="Permissão negada")
     
     return inspection
@@ -252,36 +263,7 @@ def delete_inspection(
 
 
 # ==================== COMPARTILHAMENTO ====================
-
-@api_router.post("/inspections/{inspection_id}/share")
-def share_inspection(
-    inspection_id: str,
-    req: schemas.ShareInspectionRequest,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    existing = crud.get_inspection(db, inspection_id)
-    if existing is None:
-        raise HTTPException(status_code=404, detail="Inspection not found")
-    
-    if existing.created_by != current_user.username:
-        raise HTTPException(status_code=403, detail="Apenas o criador pode compartilhar")
-    
-    shared = crud.share_inspection(db, inspection_id, req.shared_with_uids)
-    
-    # Cria notificações para cada usuário
-    for uid in req.shared_with_uids:
-        crud.create_notification(
-            db,
-            uid,
-            "inspection_shared",
-            f"Inspeção compartilhada",
-            f"{current_user.username} compartilhou uma inspeção com você",
-            related_inspection_id=inspection_id,
-            related_user=current_user.username
-        )
-    
-    return {"detail": "Inspection shared", "shared_with": shared.shared_with}
+# Funcionalidade de compartilhamento removida - apenas admin visualiza todas as inspeções
 
 
 # ==================== RECICLAGEM ====================

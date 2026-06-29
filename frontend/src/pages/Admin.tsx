@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ShieldCheck, ArrowLeft, UserPlus, Users, Power, PowerOff } from "lucide-react";
+import { ShieldCheck, ArrowLeft, UserPlus, Users, Power, PowerOff, ClipboardList, Eye } from "lucide-react";
 
 type Role = "admin" | "user";
 
@@ -23,6 +23,8 @@ export default function Admin() {
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState<Role>("user");
   const [isCreating, setIsCreating] = useState(false);
+  const [allInspections, setAllInspections] = useState<any[]>([]);
+  const [loadingInspections, setLoadingInspections] = useState(false);
 
   const navigate = useNavigate();
 
@@ -47,6 +49,18 @@ export default function Admin() {
     return response.json() as Promise<T>;
   };
 
+  const fetchAllInspections = async () => {
+    setLoadingInspections(true);
+    try {
+      const data = await apiFetch<any[]>("/api/inspections/all");
+      setAllInspections(data);
+    } catch (error: any) {
+      toast.error("Erro ao carregar inspeções: " + (error?.message || "desconhecido"));
+    } finally {
+      setLoadingInspections(false);
+    }
+  };
+
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setUsersError(null);
@@ -68,7 +82,10 @@ export default function Admin() {
     }
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { 
+    fetchUsers(); 
+    fetchAllInspections();
+  }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,6 +221,50 @@ export default function Admin() {
                       {u.ativo ? <PowerOff className="h-3 w-3" /> : <Power className="h-3 w-3" />}
                       {u.ativo ? "Bloquear" : "Ativar"}
                     </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Seção: Todas as Inspeções */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2 text-foreground">
+              <ClipboardList className="h-5 w-5 text-primary" /> Todas as Inspeções
+            </h2>
+            <button 
+              onClick={fetchAllInspections}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-card border border-border hover:bg-muted rounded-lg transition-all"
+            >
+              <Eye className="h-3.5 w-3.5" /> Atualizar
+            </button>
+          </div>
+
+          {loadingInspections ? (
+            <p className="text-sm text-muted-foreground">Carregando inspeções...</p>
+          ) : allInspections.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma inspeção registrada no sistema.</p>
+          ) : (
+            <div className="grid gap-3">
+              {allInspections.map((insp) => (
+                <div key={insp.id} className="glass-card rounded-xl p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">
+                        {insp.header?.cliente || "Sem cliente"} — {insp.header?.tipoEquipamento || "N/A"}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Técnico: <span className="font-semibold text-primary">{insp.created_by}</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(insp.created_at).toLocaleDateString("pt-BR")} • 
+                        Status: <span className={insp.status === "finalizada" ? "text-green-500" : "text-status-warning"}>
+                          {insp.status === "finalizada" ? "Finalizada" : "Em andamento"}
+                        </span>
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}

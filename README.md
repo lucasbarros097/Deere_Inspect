@@ -10,7 +10,6 @@
 - **Checklist por equipamento:** Cada tipo de equipamento possui seções e itens específicos
 - **Assinatura digital:** Finalização da inspeção com assinatura do técnico
 - **Kanban:** Avaliação visual dos sistemas do equipamento
-- **Compartilhamento:** Compartilhe inspeções com outros técnicos
 - **Reciclagem:** Reaproveite dados de inspeções anteriores
 - **Histórico de edições:** Rastreabilidade completa de todas as alterações
 - **Notificações:** Sistema de notificações para compartilhamentos e reciclagens
@@ -204,8 +203,8 @@ As imagens são automaticamente redimensionadas e comprimidas para otimizar o ar
 
 | Perfil | Acesso |
 |--------|--------|
-| **Administrador** | Acesso total: criar/gerenciar usuários, ver todas as inspeções, painel admin |
-| **Técnico** | Criar e gerenciar próprias inspeções, compartilhar, reciclar |
+| **Administrador** | Acesso total: criar/gerenciar usuários, ver todas as inspeções de todos os técnicos, painel admin |
+| **Técnico** | Criar e gerenciar próprias inspeções, reciclar |
 
 - Administradores **não** são forçados a trocar senha no primeiro login
 - Técnicos são forçados a trocar senha no primeiro login (segurança)

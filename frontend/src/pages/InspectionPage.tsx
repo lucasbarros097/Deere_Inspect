@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getInspectionById, saveInspection } from "@/store/inspectionStore";
 import { getNextRastreabilidade } from "@/lib/inspectionsApi";
-import { Inspection, EQUIPMENT_LABELS } from "@/types/inspection";
+import { Inspection, EQUIPMENT_LABELS, EquipmentType } from "@/types/inspection";
 import { InspectionHeader } from "@/components/inspection/InspectionHeader";
 import { AnalysisRequestSection } from "@/components/inspection/AnalysisRequestSection";
 import { OperatingConditionsSection } from "@/components/inspection/OperatingConditionsSection";
@@ -12,11 +12,10 @@ import { KanbanSection } from "@/components/inspection/KanbanSection";
 import { PhotosSection } from "@/components/inspection/PhotosSection";
 import { SignatureSection } from "@/components/inspection/SignatureSection";
 import { getSectionsForEquipment } from "@/data/checklistSections";
-import { ArrowLeft, Save, ChevronRight, Share2, Recycle, History } from "lucide-react";
+import { ArrowLeft, Save, ChevronRight, Recycle, History } from "lucide-react";
 import { useAuth } from "@/store/AuthContext";
 
 // Novos Modais
-import ShareModal from "@/components/ShareModal";
 import RecycleModal from "@/components/RecycleModal";
 import EditHistory from "@/components/EditHistory";
 import EditReasonDialog from "@/components/EditReasonDialog";
@@ -44,11 +43,11 @@ const InspectionPage = () => {
   const [saved, setSaved] = useState(false);
 
   // Estados dos novos modais
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isRecycleModalOpen, setIsRecycleModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isEditReasonOpen, setIsEditReasonOpen] = useState(false);
   const [pendingUpdate, setPendingUpdate] = useState<Partial<Inspection> | null>(null);
+  const [editReason, setEditReason] = useState("");
 
   const isFinalized = inspection?.status === "finalizada";
 
@@ -79,17 +78,9 @@ const InspectionPage = () => {
     }
   }, [inspection?.header.rastreabilidade]);
 
-  const applyUpdate = (updates: Partial<Inspection>, reason?: string) => {
+  const applyUpdate = (updates: Partial<Inspection>) => {
     if (!inspection) return;
     const updated = { ...inspection, ...updates };
-
-    if (reason) {
-      updated.editHistory = [
-        ...(updated.editHistory || []),
-        { date: Date.now(), reason, user: username || "Desconhecido" }
-      ];
-    }
-
     setInspection(updated);
     saveInspection(updated);
     setSaved(true);
@@ -112,11 +103,12 @@ const InspectionPage = () => {
     [inspection, isFinalized]
   );
 
-  const confirmEditReason = (reason: string) => {
+  const confirmEditReason = () => {
     setIsEditReasonOpen(false);
     if (pendingUpdate) {
-      applyUpdate(pendingUpdate, reason);
+      applyUpdate(pendingUpdate);
       setPendingUpdate(null);
+      setEditReason("");
     }
   };
 
@@ -153,14 +145,9 @@ const InspectionPage = () => {
                 <History className="h-4 w-4" />
               </button>
               {isFinalized && (
-                <>
-                  <button onClick={() => setIsShareModalOpen(true)} className="p-1.5 bg-secondary hover:bg-secondary/80 text-foreground rounded transition-colors" title="Compartilhar">
-                    <Share2 className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => setIsRecycleModalOpen(true)} className="p-1.5 bg-secondary hover:bg-secondary/80 text-foreground rounded transition-colors" title="Aproveitar">
-                    <Recycle className="h-4 w-4" />
-                  </button>
-                </>
+                <button onClick={() => setIsRecycleModalOpen(true)} className="p-1.5 bg-secondary hover:bg-secondary/80 text-foreground rounded transition-colors" title="Aproveitar">
+                  <Recycle className="h-4 w-4" />
+                </button>
               )}
             </div>
           </div>
@@ -279,11 +266,11 @@ const InspectionPage = () => {
       </main>
 
       {/* Modais Integrados */}
-      {isShareModalOpen && <ShareModal inspection={inspection} onClose={() => setIsShareModalOpen(false)} />}
-      {isRecycleModalOpen && <RecycleModal inspection={inspection} onClose={() => setIsRecycleModalOpen(false)} />}
-      {isHistoryOpen && <EditHistory inspection={inspection} onClose={() => setIsHistoryOpen(false)} />}
+      {isRecycleModalOpen && <RecycleModal isOpen={isRecycleModalOpen} inspectionId={inspection.id} onClose={() => setIsRecycleModalOpen(false)} />}
+      {isHistoryOpen && <EditHistory isOpen={isHistoryOpen} inspectionId={inspection.id} onClose={() => setIsHistoryOpen(false)} />}
       {isEditReasonOpen && (
         <EditReasonDialog
+          isOpen={isEditReasonOpen}
           onConfirm={confirmEditReason}
           onCancel={() => { setIsEditReasonOpen(false); setPendingUpdate(null); }}
         />

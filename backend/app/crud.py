@@ -28,6 +28,13 @@ def get_inspections_for_user(db: Session, username: str) -> list[models.Inspecti
     ).all()
 
 
+def get_all_inspections(db: Session) -> list[models.Inspection]:
+    """Retorna TODAS as inspeções (apenas para admin)"""
+    return db.scalars(
+        select(models.Inspection).order_by(models.Inspection.created_at.desc())
+    ).all()
+
+
 def create_inspection(db: Session, inspection: schemas.InspectionCreate) -> models.Inspection:
     db_inspection = models.Inspection(**inspection.dict())
     db.add(db_inspection)
