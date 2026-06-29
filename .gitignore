@@ -6,6 +6,7 @@ node_modules
 # Local Postgres data (deployment)
 **/data/postgres/
 deployment/deployment/data/
+data/
 
 # Build / Vite
 dist
@@ -17,11 +18,15 @@ venv/
 .venv/
 __pycache__/
 *.py[cod]
+*.db
+*.sqlite
+*.sqlite3
 
 # Editor / OS
 .DS_Store
 .vscode/
 .idea/
+Thumbs.db
 
 # Env variants
 .env.local
@@ -30,3 +35,12 @@ __pycache__/
 
 # Local instructions / docs not for repo tracking
 misc/.instructions.md
+
+# Database backups
+*.sql
+*.dump
+*.backup
+
+# Logs
+*.log
+logs/

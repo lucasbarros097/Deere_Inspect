@@ -10,7 +10,7 @@ services:
     env_file:
       - ./.env
     environment:
-      - VITE_API_URL=
+      - VITE_API_URL=http://localhost:8000
 
   backend:
     build: ./backend

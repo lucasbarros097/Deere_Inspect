@@ -1,5 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.exc import OperationalError
+import time
 
 from .config import settings
 
@@ -11,13 +13,26 @@ Base = declarative_base()
 def init_db() -> None:
     from . import models
     from sqlalchemy import text
-    import time
     import uuid
     from passlib.context import CryptContext
 
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-    Base.metadata.create_all(bind=engine)
+    # Retry logic for database connection
+    max_retries = 30
+    retry_delay = 3
+    
+    for attempt in range(max_retries):
+        try:
+            Base.metadata.create_all(bind=engine)
+            break
+        except OperationalError as e:
+            if attempt < max_retries - 1:
+                print(f"Database connection attempt {attempt + 1}/{max_retries} failed. Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                print(f"Failed to connect to database after {max_retries} attempts.")
+                raise
     try:
         with engine.begin() as conn:
             conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR NULL;"))
