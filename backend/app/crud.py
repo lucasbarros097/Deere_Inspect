@@ -246,6 +246,12 @@ def get_next_rastreabilidade(db: Session) -> int:
 def get_users(db: Session) -> list[models.User]:
     return db.scalars(select(models.User).order_by(models.User.criado_em.desc())).all()
 
+def has_any_user(db: Session) -> bool:
+    """Return True if there is at least one user in the database.
+    This is used to determine if the initial admin setup is required.
+    """
+    return db.query(models.User).first() is not None
+
 
 def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
     return db.scalars(select(models.User).filter(models.User.username == username)).first()

@@ -112,7 +112,10 @@ def login(login_req: schemas.LoginRequest, db: Session = Depends(get_db)):
         if days_since_change > PASSWORD_EXPIRY_DAYS:
             password_expired = True
 
-    must_change = user.must_change_password or password_expired
+    # Only non-admin users (role "user") must change password
+    must_change = False
+    if user.role != "admin":
+        must_change = user.must_change_password or password_expired
 
     access_token = auth.create_access_token(data={
         "sub": user.username,
@@ -437,6 +440,25 @@ def update_user(
     if updated is None:
         raise HTTPException(status_code=404, detail="User not found")
     return updated
+
+# ==================== INITIAL SETUP ==================
+
+@api_router.get("/setup/needs", response_model=dict)
+def needs_setup(db: Session = Depends(get_db)):
+    """Return whether the application needs initial setup (no users exist)."""
+    return {"needs_setup": not crud.has_any_user(db)}
+
+@api_router.post("/setup/admin", response_model=schemas.UserResponse)
+def create_initial_admin(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    """Create the first admin user. This endpoint is only usable when no users exist.
+    It does not require authentication.
+    """
+    if crud.has_any_user(db):
+        raise HTTPException(status_code=400, detail="Setup already completed")
+    # Force admin role regardless of payload
+    user.role = "admin"
+    password_hash = auth.get_password_hash(user.password)
+    return crud.create_user(db, user, password_hash)
 
 
 app.include_router(api_router)

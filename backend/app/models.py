@@ -1,5 +1,5 @@
-from sqlalchemy import Column, String, Text, Boolean, BigInteger, DateTime, Integer
-from sqlalchemy.dialects.postgresql import JSONB, ARRAY
+from sqlalchemy import Column, String, Text, Boolean, BigInteger, DateTime, Integer, JSON
+# Use generic JSON type for compatibility; ARRAY not supported in SQLite, use JSON to store list
 from sqlalchemy.sql import func
 from .database import Base
 
@@ -11,17 +11,18 @@ class Inspection(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     status = Column(String, nullable=False, default="em-andamento")
-    header = Column(JSONB, nullable=False)
-    analysis_request = Column(JSONB, nullable=False)
-    operating_conditions = Column(JSONB, nullable=False)
-    diagnostico = Column(JSONB, nullable=False)
-    checklist_data = Column(JSONB, nullable=False)
-    kanban = Column(JSONB, nullable=False)
-    fotos = Column(JSONB, nullable=False)
+    header = Column(JSON, nullable=False)
+    analysis_request = Column(JSON, nullable=False)
+    operating_conditions = Column(JSON, nullable=False)
+    diagnostico = Column(JSON, nullable=False)
+    checklist_data = Column(JSON, nullable=False)
+    kanban = Column(JSON, nullable=False)
+    fotos = Column(JSON, nullable=False)
     assinatura_tecnico = Column(String, nullable=True)
     
     # Compartilhamento e reciclagem
-    shared_with = Column(ARRAY(String), nullable=False, default=[])  # lista de UIDs
+    # Store list of UIDs as JSON array for SQLite compatibility
+    shared_with = Column(JSON, nullable=False, default=[])  # lista de UIDs
     recycled_from = Column(String, nullable=True)  # ID da inspeção original
     recycled_by = Column(String, nullable=True)  # username de quem reciclou
     recycled_at = Column(BigInteger, nullable=True)  # epoch

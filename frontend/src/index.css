@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 38 95% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 92%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 38 95% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 38 95% 48%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 96%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 38 95% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 90%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 85%;
+    --sidebar-ring: 38 95% 48%;
+
+    /* Custom tokens */
+    --industrial-dark: 0 0% 96%;
+    --industrial-dark-foreground: 0 0% 10%;
+    --jd-green: 38 95% 48%;
+    --jd-green-light: 38 95% 58%;
+    --jd-yellow: 38 95% 48%;
+    --jd-yellow-light: 38 95% 58%;
+    --status-ok: 142 70% 40%;
+    --status-warning: 38 95% 48%;
+    --status-fail: 0 84% 55%;
+
+    --status-ok-bg: 142 70% 92%;
+    --status-warning-bg: 38 95% 92%;
+    --status-fail-bg: 0 84% 92%;
+  }
+
+  .dark {
+    --background: 0 0% 6%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 38 95% 54%;
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 38 95% 54%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 38 95% 54%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 38 95% 54%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 38 95% 54%;
+
+    /* Custom tokens */
+    --industrial-dark: 0 0% 6%;
+    --industrial-dark-foreground: 0 0% 95%;
+    --jd-green: 38 95% 54%;
+    --jd-green-light: 38 95% 65%;
+    --jd-yellow: 38 95% 54%;
+    --jd-yellow-light: 38 95% 65%;
+    --status-ok: 142 70% 45%;
+    --status-warning: 38 95% 54%;
+    --status-fail: 0 84% 60%;
+
+    --status-ok-bg: 142 70% 10%;
+    --status-warning-bg: 38 95% 10%;
+    --status-fail-bg: 0 84% 10%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  /* Large touch targets for industrial use */
+  button, [role="button"], input, select, textarea {
+    min-height: 44px;
+  }
+}
+
+@layer utilities {
+  .touch-target {
+    @apply min-h-[48px] min-w-[48px];
+  }
+
+  .industrial-header {
+    @apply bg-industrial-dark text-industrial-dark-foreground;
+  }
+
+  .value-ok {
+    @apply bg-status-ok-bg text-green-400 border-green-800;
+  }
+
+  .value-warning {
+    @apply bg-status-warning-bg text-yellow-400 border-yellow-800;
+  }
+
+  .value-fail {
+    @apply bg-status-fail-bg text-red-400 border-red-800;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Glassmorphism */
+  .glass {
+    @apply bg-background/80 backdrop-blur-xl border border-border/50;
+  }
+
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-md border border-border/50 shadow-lg shadow-black/5;
+  }
+
+  /* Neumorphism light */
+  .neo-light {
+    @apply bg-background;
+    box-shadow: 8px 8px 16px rgba(0,0,0,0.05), -8px -8px 16px rgba(255,255,255,0.8);
+  }
+
+  .dark .neo-light {
+    box-shadow: 8px 8px 16px rgba(0,0,0,0.3), -8px -8px 16px rgba(255,255,255,0.03);
+  }
+
+  /* Smooth scroll */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60;
+  }
+
+  /* Animated gradient border */
+  .gradient-border {
+    position: relative;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)/0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  /* Page transitions */
+  .page-enter {
+    animation: pageEnter 0.3s ease-out;
+  }
+  @keyframes pageEnter {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Scale on hover for cards */
+  .card-hover {
+    @apply transition-all duration-300;
+  }
+  .card-hover:hover {
+    @apply -translate-y-1 shadow-xl shadow-black/10;
+  }
+
+  /* Bottom safe area for mobile */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* 
+ * Ocultar Forçado: Badges/pop-ups injetados pela plataforma da Lovable 
+ * no domínio .lovable.app
+ */
+[id*="lovable"], 
+[class*="lovable"], 
+iframe[src*="lovable"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: -9999 !important;
+}
