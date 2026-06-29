@@ -119,11 +119,13 @@ Acesse: **http://localhost:8080**
 
 ### 4. Configuração inicial
 
-1. Acesse o sistema pela primeira vez
-2. A tela de **Configuração Inicial** será exibida
-3. Crie o **primeiro administrador** (usuário + senha)
-4. Faça login com o administrador criado
-5. Acesse **Ferramentas > Admin** para cadastrar técnicos
+Na primeira execução (banco de dados vazio), o sistema cria automaticamente o usuário administrador definido no `.env` (`ADMIN_USERNAME` / `ADMIN_PASSWORD`).
+
+1. Acesse **http://localhost:8080**
+2. Faça login com o administrador criado automaticamente
+3. Acesse **Ferramentas > Admin** para cadastrar técnicos
+
+> **Nota:** O administrador é criado apenas na primeira execução. Se você usar `docker-compose down` (sem `-v`), os dados são preservados e o admin não será recriado. Use `docker-compose down -v` apenas se quiser resetar completamente o banco de dados.
 
 ### 5. Desenvolvimento local
 

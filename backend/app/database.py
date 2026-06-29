@@ -26,13 +26,12 @@ def init_db() -> None:
             conn.execute(text("ALTER TABLE users ALTER COLUMN username SET NOT NULL;"))
             conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users(username);") )
             conn.execute(text("ALTER TABLE users DROP COLUMN IF EXISTS email;"))
+            # Only create initial admin if the database is completely empty (no users at all)
+            # This prevents re-creating admin on every container restart
             admin_username = settings.admin_username.strip().lower()
             if admin_username:
-                existing = conn.execute(
-                    text("SELECT uid FROM users WHERE username = :username"),
-                    {"username": admin_username},
-                ).first()
-                if existing is None:
+                user_count = conn.execute(text("SELECT COUNT(*) FROM users")).scalar()
+                if user_count == 0:
                     conn.execute(
                         text(
                             "INSERT INTO users (uid, username, role, ativo, criado_em, password_hash) VALUES (:uid, :username, 'admin', true, :criado_em, :password_hash)"
