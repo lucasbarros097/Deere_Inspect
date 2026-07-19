@@ -14,7 +14,7 @@ const PASSWORD_RULES: PasswordRule[] = [
   { label: "Uma letra maiúscula (A-Z)", test: (p) => /[A-Z]/.test(p) },
   { label: "Uma letra minúscula (a-z)", test: (p) => /[a-z]/.test(p) },
   { label: "Um número (0-9)", test: (p) => /\d/.test(p) },
-  { label: "Um caractere especial (!@#$%...)", test: (p) => /[!@#$%^&*()\-_=+\[\]{};:'",.<>/?\\|`~]/.test(p) },
+  { label: "Um caractere especial (!@#$%...)", test: (p) => /[!@#$%^&*()\-_=+[\]{};:'",.<>/?\\|`~]/.test(p) },
 ];
 
 export default function ChangePasswordPage() {
