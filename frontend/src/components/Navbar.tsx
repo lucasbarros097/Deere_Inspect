@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
-import { Home, Users, Settings, LogOut } from "lucide-react";
+import { Home, Users, Settings, LogOut, HardHat } from "lucide-react";
 
 /**
  * Modern responsive navbar:
@@ -8,14 +8,17 @@ import { Home, Users, Settings, LogOut } from "lucide-react";
  * - Side/Top bar on desktop
  */
 export default function Navbar() {
-  const { role, logout, username } = useAuth();
+  const { role, logout, username, isAuthenticated } = useAuth();
   const location = useLocation();
 
   const navItems = [
     { to: "/", icon: Home, label: "Home", exact: true },
     { to: "/sobre-nos", icon: Users, label: "Sobre Nós" },
-    { to: "/ferramentas", icon: Settings, label: "Ferramentas" },
   ];
+
+  if (isAuthenticated) {
+    navItems.push({ to: "/ferramentas", icon: Settings, label: "Ferramentas" });
+  }
 
   if (role === "admin") {
     navItems.push({ to: "/admin", icon: Settings, label: "Admin" });
@@ -55,7 +58,7 @@ export default function Navbar() {
             {/* Logo / Brand */}
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Settings className="h-4 w-4 text-primary-foreground" />
+                <HardHat className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="font-bold text-foreground text-sm">Deere Inspect</span>
             </div>
@@ -82,16 +85,27 @@ export default function Navbar() {
 
             {/* User info & logout */}
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground hidden lg:block">
-                {username}
-              </span>
-              <button
-                onClick={logout}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                title="Sair"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
+              {role ? (
+                <>
+                  <span className="text-xs font-medium text-foreground bg-primary/10 px-2 py-1 rounded-md hidden lg:block">
+                    {username}
+                  </span>
+                  <button
+                    onClick={logout}
+                    className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                    title="Sair"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </>
+              ) : (
+                <NavLink
+                  to="/login"
+                  className="px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                >
+                  Entrar
+                </NavLink>
+              )}
             </div>
           </div>
         </div>

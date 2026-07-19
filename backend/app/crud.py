@@ -1,50 +1,53 @@
 import time
 import uuid
 from typing import Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from . import models, schemas
 
 
 # ==================== INSPECTIONS ====================
 
-def get_inspection(db: Session, inspection_id: str) -> Optional[models.Inspection]:
-    return db.get(models.Inspection, inspection_id)
+async def get_inspection(db: AsyncSession, inspection_id: str) -> Optional[models.Inspection]:
+    return (await db.get(models.Inspection, inspection_id))
 
 
-def get_inspections(db: Session) -> list[models.Inspection]:
-    return db.scalars(select(models.Inspection).order_by(models.Inspection.created_at.desc())).all()
+async def get_inspections(db: AsyncSession) -> list[models.Inspection]:
+    result = await db.scalars(select(models.Inspection).order_by(models.Inspection.created_at.desc()))
+    return result.all()
 
 
-def get_inspections_for_user(db: Session, username: str) -> list[models.Inspection]:
+async def get_inspections_for_user(db: AsyncSession, username: str) -> list[models.Inspection]:
     """Retorna inspeções criadas pelo user + compartilhadas com ele"""
-    return db.scalars(
+    result = await db.scalars(
         select(models.Inspection)
         .where(
             (models.Inspection.created_by == username) | 
             (models.Inspection.shared_with.contains([username]))
         )
         .order_by(models.Inspection.created_at.desc())
-    ).all()
+    )
+    return result.all()
 
 
-def get_all_inspections(db: Session) -> list[models.Inspection]:
+async def get_all_inspections(db: AsyncSession) -> list[models.Inspection]:
     """Retorna TODAS as inspeções (apenas para admin)"""
-    return db.scalars(
+    result = await db.scalars(
         select(models.Inspection).order_by(models.Inspection.created_at.desc())
-    ).all()
+    )
+    return result.all()
 
 
-def create_inspection(db: Session, inspection: schemas.InspectionCreate) -> models.Inspection:
+async def create_inspection(db: AsyncSession, inspection: schemas.InspectionCreate) -> models.Inspection:
     db_inspection = models.Inspection(**inspection.dict())
     db.add(db_inspection)
-    db.commit()
-    db.refresh(db_inspection)
+    await db.commit()
+    await db.refresh(db_inspection)
     return db_inspection
 
 
-def update_inspection(db: Session, inspection_id: str, updates: schemas.InspectionUpdate, edited_by: str) -> Optional[models.Inspection]:
-    db_inspection = get_inspection(db, inspection_id)
+async def update_inspection(db: AsyncSession, inspection_id: str, updates: schemas.InspectionUpdate, edited_by: str) -> Optional[models.Inspection]:
+    db_inspection = await get_inspection(db, inspection_id)
     if db_inspection is None:
         return None
     
@@ -53,7 +56,7 @@ def update_inspection(db: Session, inspection_id: str, updates: schemas.Inspecti
         if field != "edit_reason":  # edit_reason não é um campo da inspeção
             old_value = getattr(db_inspection, field, None)
             if old_value != value:
-                log_inspection_edit(
+                await log_inspection_edit(
                     db,
                     inspection_id,
                     edited_by,
@@ -65,40 +68,40 @@ def update_inspection(db: Session, inspection_id: str, updates: schemas.Inspecti
             setattr(db_inspection, field, value)
     
     db_inspection.updated_at = __import__('datetime').datetime.now(__import__('datetime').timezone.utc)
-    db.commit()
-    db.refresh(db_inspection)
+    await db.commit()
+    await db.refresh(db_inspection)
     return db_inspection
 
 
-def delete_inspection(db: Session, inspection_id: str) -> bool:
-    db_inspection = get_inspection(db, inspection_id)
+async def delete_inspection(db: AsyncSession, inspection_id: str) -> bool:
+    db_inspection = await get_inspection(db, inspection_id)
     if db_inspection is None:
         return False
     db.delete(db_inspection)
-    db.commit()
+    await db.commit()
     return True
 
 
 # ==================== COMPARTILHAMENTO ====================
 
-def share_inspection(db: Session, inspection_id: str, shared_with_uids: list[str]) -> Optional[models.Inspection]:
+async def share_inspection(db: AsyncSession, inspection_id: str, shared_with_uids: list[str]) -> Optional[models.Inspection]:
     """Compartilha uma inspeção com outros usuários"""
-    inspection = get_inspection(db, inspection_id)
+    inspection = await get_inspection(db, inspection_id)
     if inspection is None:
         return None
     
     # Remove duplicatas
     inspection.shared_with = list(set((inspection.shared_with or []) + shared_with_uids))
-    db.commit()
-    db.refresh(inspection)
+    await db.commit()
+    await db.refresh(inspection)
     return inspection
 
 
 # ==================== RECICLAGEM ====================
 
-def recycle_inspection(db: Session, original_id: str, new_owner_username: str, fields_to_keep: list[str]) -> Optional[models.Inspection]:
+async def recycle_inspection(db: AsyncSession, original_id: str, new_owner_username: str, fields_to_keep: list[str]) -> Optional[models.Inspection]:
     """Recicla uma inspeção criando uma cópia com campos selecionados"""
-    original = get_inspection(db, original_id)
+    original = await get_inspection(db, original_id)
     if original is None:
         return None
     
@@ -146,15 +149,15 @@ def recycle_inspection(db: Session, original_id: str, new_owner_username: str, f
     recycled.shared_with = []
     
     db.add(recycled)
-    db.commit()
-    db.refresh(recycled)
+    await db.commit()
+    await db.refresh(recycled)
     return recycled
 
 
 # ==================== EDITS LOG ====================
 
-def log_inspection_edit(
-    db: Session,
+async def log_inspection_edit(
+    db: AsyncSession,
     inspection_id: str,
     edited_by: str,
     field_changed: str,
@@ -174,23 +177,24 @@ def log_inspection_edit(
         edit_reason=edit_reason,
     )
     db.add(edit)
-    db.commit()
+    await db.commit()
     return edit
 
 
-def get_inspection_edits(db: Session, inspection_id: str) -> list[models.InspectionEdit]:
+async def get_inspection_edits(db: AsyncSession, inspection_id: str) -> list[models.InspectionEdit]:
     """Retorna histórico de edições de uma inspeção"""
-    return db.scalars(
+    result = await db.scalars(
         select(models.InspectionEdit)
         .where(models.InspectionEdit.inspection_id == inspection_id)
         .order_by(models.InspectionEdit.edited_at.desc())
-    ).all()
+    )
+    return result.all()
 
 
 # ==================== NOTIFICATIONS ====================
 
-def create_notification(
-    db: Session,
+async def create_notification(
+    db: AsyncSession,
     user_id: str,
     noti_type: str,
     title: str,
@@ -211,60 +215,64 @@ def create_notification(
         created_at=int(time.time()),
     )
     db.add(notification)
-    db.commit()
+    await db.commit()
     return notification
 
 
-def get_notifications(db: Session, user_id: str, unread_only: bool = False) -> list[models.Notification]:
+async def get_notifications(db: AsyncSession, user_id: str, unread_only: bool = False) -> list[models.Notification]:
     """Retorna notificações do usuário"""
     query = select(models.Notification).where(models.Notification.user_id == user_id)
     
     if unread_only:
         query = query.where(models.Notification.read == False)
     
-    return db.scalars(query.order_by(models.Notification.created_at.desc())).all()
+    result = await db.scalars(query.order_by(models.Notification.created_at.desc()))
+    return result.all()
 
 
-def mark_notification_as_read(db: Session, notification_id: str) -> Optional[models.Notification]:
+async def mark_notification_as_read(db: AsyncSession, notification_id: str) -> Optional[models.Notification]:
     """Marca notificação como lida"""
-    notification = db.get(models.Notification, notification_id)
+    notification = (await db.get(models.Notification, notification_id))
     if notification is None:
         return None
     notification.read = True
-    db.commit()
-    db.refresh(notification)
+    await db.commit()
+    await db.refresh(notification)
     return notification
 
 
 # ==================== USERS ====================
 
-def get_next_rastreabilidade(db: Session) -> int:
-    counter = db.get(models.Counter, "rastreabilidade")
+async def get_next_rastreabilidade(db: AsyncSession) -> int:
+    counter = (await db.get(models.Counter, "rastreabilidade"))
     if counter is None:
         counter = models.Counter(name="rastreabilidade", last_value=1000)
         db.add(counter)
     else:
         counter.last_value += 1
-    db.commit()
-    db.refresh(counter)
+    await db.commit()
+    await db.refresh(counter)
     return int(counter.last_value)
 
 
-def get_users(db: Session) -> list[models.User]:
-    return db.scalars(select(models.User).order_by(models.User.criado_em.desc())).all()
+async def get_users(db: AsyncSession) -> list[models.User]:
+    result = await db.scalars(select(models.User).order_by(models.User.criado_em.desc()))
+    return result.all()
 
-def has_any_user(db: Session) -> bool:
+async def has_any_user(db: AsyncSession) -> bool:
     """Return True if there is at least one user in the database.
     This is used to determine if the initial admin setup is required.
     """
-    return db.query(models.User).first() is not None
+    result = await db.execute(select(models.User).limit(1))
+    return result.first() is not None
 
 
-def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
-    return db.scalars(select(models.User).filter(models.User.username == username)).first()
+async def get_user_by_username(db: AsyncSession, username: str) -> Optional[models.User]:
+    result = await db.scalars(select(models.User).filter(models.User.username == username))
+    return result.first()
 
 
-def create_user(db: Session, user: schemas.UserCreate, password_hash: str) -> models.User:
+async def create_user(db: AsyncSession, user: schemas.UserCreate, password_hash: str) -> models.User:
     user_data = user.dict(exclude={"password"})
     db_user = models.User(
         uid=user_data["uid"],
@@ -279,41 +287,41 @@ def create_user(db: Session, user: schemas.UserCreate, password_hash: str) -> mo
         locked_until=None,
     )
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
     return db_user
 
 
-def update_user(db: Session, uid: str, updates: schemas.UserUpdate) -> Optional[models.User]:
-    user = db.get(models.User, uid)
+async def update_user(db: AsyncSession, uid: str, updates: schemas.UserUpdate) -> Optional[models.User]:
+    user = (await db.get(models.User, uid))
     if user is None:
         return None
     for field, value in updates.dict(exclude_unset=True).items():
         setattr(user, field, value)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def record_failed_login(db: Session, user: models.User) -> None:
+async def record_failed_login(db: AsyncSession, user: models.User) -> None:
     user.failed_attempts = (user.failed_attempts or 0) + 1
     if user.failed_attempts >= 5:
         user.locked_until = int(time.time()) + 15 * 60
-    db.commit()
+    await db.commit()
 
 
-def record_successful_login(db: Session, user: models.User) -> None:
+async def record_successful_login(db: AsyncSession, user: models.User) -> None:
     user.failed_attempts = 0
     user.locked_until = None
-    db.commit()
+    await db.commit()
 
 
-def change_password(db: Session, user: models.User, new_password_hash: str) -> models.User:
+async def change_password(db: AsyncSession, user: models.User, new_password_hash: str) -> models.User:
     user.password_hash = new_password_hash
     user.must_change_password = False
     user.password_changed_at = int(time.time())
     user.failed_attempts = 0
     user.locked_until = None
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user

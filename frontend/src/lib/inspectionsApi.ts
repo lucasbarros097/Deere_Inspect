@@ -7,16 +7,13 @@ function apiUrl(path: string) {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem("access_token");
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   };
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
 
   const res = await fetch(apiUrl(path), {
     ...options,
+    credentials: "include", // For HttpOnly Cookies
     headers: {
       ...headers,
       ...(options.headers || {}),
@@ -61,16 +58,13 @@ export async function getNextRastreabilidade(): Promise<number> {
 /** Syncs a single inspection to the backend */
 export async function syncInspectionToCloud(inspection: Inspection): Promise<void> {
   const body = toSnakeCaseInspection(inspection);
-  const token = localStorage.getItem("access_token");
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   };
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
 
   const updateResponse = await fetch(apiUrl(`/api/inspections/${inspection.id}`), {
     method: "PUT",
+    credentials: "include",
     headers,
     body: JSON.stringify(body),
   });

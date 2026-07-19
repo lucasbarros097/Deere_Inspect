@@ -13,7 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    --primary: 38 95% 48%;
+    --primary: 34 51% 55%; /* Terraverde Gold */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 92%;
@@ -22,7 +22,7 @@
     --muted: 0 0% 92%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 38 95% 48%;
+    --accent: 226 62% 32%; /* Terraverde Dark Blue */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -30,32 +30,32 @@
 
     --border: 0 0% 85%;
     --input: 0 0% 85%;
-    --ring: 38 95% 48%;
+    --ring: 34 51% 55%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 0 0% 96%;
     --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 38 95% 48%;
+    --sidebar-primary: 34 51% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 90%;
     --sidebar-accent-foreground: 0 0% 10%;
     --sidebar-border: 0 0% 85%;
-    --sidebar-ring: 38 95% 48%;
+    --sidebar-ring: 34 51% 55%;
 
-    /* Custom tokens */
-    --industrial-dark: 0 0% 96%;
-    --industrial-dark-foreground: 0 0% 10%;
-    --jd-green: 38 95% 48%;
-    --jd-green-light: 38 95% 58%;
-    --jd-yellow: 38 95% 48%;
-    --jd-yellow-light: 38 95% 58%;
+    /* Custom tokens - Terraverde Grupo */
+    --industrial-dark: 0 0% 12%;
+    --industrial-dark-foreground: 0 0% 96%;
+    --jd-green: 34 51% 55%; /* Changed to Terraverde Gold */
+    --jd-green-light: 34 51% 65%;
+    --jd-yellow: 226 62% 32%; /* Changed to Terraverde Dark Blue */
+    --jd-yellow-light: 226 62% 42%;
     --status-ok: 142 70% 40%;
-    --status-warning: 38 95% 48%;
+    --status-warning: 34 51% 55%;
     --status-fail: 0 84% 55%;
 
     --status-ok-bg: 142 70% 92%;
-    --status-warning-bg: 38 95% 92%;
+    --status-warning-bg: 34 51% 92%;
     --status-fail-bg: 0 84% 92%;
   }
 
@@ -69,7 +69,7 @@
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 38 95% 54%;
+    --primary: 34 51% 55%;
     --primary-foreground: 0 0% 10%;
 
     --secondary: 0 0% 15%;
@@ -78,40 +78,40 @@
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 38 95% 54%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 226 62% 42%;
+    --accent-foreground: 0 0% 95%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 95%;
 
     --border: 0 0% 18%;
     --input: 0 0% 18%;
-    --ring: 38 95% 54%;
+    --ring: 34 51% 55%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 0 0% 8%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 38 95% 54%;
+    --sidebar-primary: 34 51% 55%;
     --sidebar-primary-foreground: 0 0% 10%;
     --sidebar-accent: 0 0% 15%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 38 95% 54%;
+    --sidebar-ring: 34 51% 55%;
 
-    /* Custom tokens */
+    /* Custom tokens - Terraverde Grupo */
     --industrial-dark: 0 0% 6%;
     --industrial-dark-foreground: 0 0% 95%;
-    --jd-green: 38 95% 54%;
-    --jd-green-light: 38 95% 65%;
-    --jd-yellow: 38 95% 54%;
-    --jd-yellow-light: 38 95% 65%;
+    --jd-green: 34 51% 55%; 
+    --jd-green-light: 34 51% 65%;
+    --jd-yellow: 226 62% 42%;
+    --jd-yellow-light: 226 62% 52%;
     --status-ok: 142 70% 45%;
-    --status-warning: 38 95% 54%;
+    --status-warning: 34 51% 55%;
     --status-fail: 0 84% 60%;
 
     --status-ok-bg: 142 70% 10%;
-    --status-warning-bg: 38 95% 10%;
+    --status-warning-bg: 34 51% 10%;
     --status-fail-bg: 0 84% 10%;
   }
 }
@@ -169,7 +169,7 @@
   }
 
   .glass-card {
-    @apply bg-card/80 backdrop-blur-md border border-border/50 shadow-lg shadow-black/5;
+    @apply bg-card/60 backdrop-blur-xl border border-border/50 shadow-xl shadow-black/10;
   }
 
   /* Neumorphism light */

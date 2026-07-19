@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
-import { HomeIcon, ArrowRight, ClipboardCheck, Shield, FileText } from "lucide-react";
+import { HomeIcon, ArrowRight, ClipboardCheck, Shield, FileText, LogIn, HardHat } from "lucide-react";
+import { useAuth } from "@/store/AuthContext";
 
 /**
  * Home page – modern landing page with feature highlights.
  */
 export default function Home() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   
   const features = [
     {
@@ -35,8 +37,8 @@ export default function Home() {
         
         <div className="max-w-4xl mx-auto px-4 py-20 md:py-28 relative">
           <div className="text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/20 mb-2">
-              <HomeIcon className="h-8 w-8 text-primary-foreground" />
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/20 mb-2">
+              <HardHat className="h-10 w-10 text-primary-foreground" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold">
               <span className="text-gradient">Análise Técnica</span>
@@ -49,16 +51,26 @@ export default function Home() {
               rastreabilidade de todas as etapas.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-              <button
-                onClick={() => navigate("/ferramentas")}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-semibold hover:from-primary/90 hover:to-primary transition-all shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98]"
-              >
-                Ir para Ferramentas
-                <ArrowRight className="h-4 w-4" />
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => navigate("/ferramentas")}
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-bold hover:from-primary/90 hover:to-primary transition-all shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] text-lg"
+                >
+                  Ir para Ferramentas
+                  <ArrowRight className="h-5 w-5" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate("/login")}
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-bold hover:from-primary/90 hover:to-primary transition-all shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] text-lg"
+                >
+                  <LogIn className="h-5 w-5" />
+                  Fazer Login
+                </button>
+              )}
               <button
                 onClick={() => navigate("/sobre-nos")}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-card border border-border text-foreground rounded-xl font-semibold hover:bg-muted transition-all active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-card/50 backdrop-blur-md border border-border/50 text-foreground rounded-xl font-bold hover:bg-card transition-all active:scale-[0.98] text-lg shadow-sm"
               >
                 Sobre Nós
               </button>

@@ -3,14 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getInspectionById, saveInspection } from "@/store/inspectionStore";
 import { getNextRastreabilidade } from "@/lib/inspectionsApi";
 import { Inspection, EQUIPMENT_LABELS, EquipmentType } from "@/types/inspection";
-import { InspectionHeader } from "@/components/inspection/InspectionHeader";
-import { AnalysisRequestSection } from "@/components/inspection/AnalysisRequestSection";
-import { OperatingConditionsSection } from "@/components/inspection/OperatingConditionsSection";
-import { DiagnosticoSection } from "@/components/inspection/DiagnosticoSection";
-import { ChecklistSectionView } from "@/components/inspection/ChecklistSectionView";
-import { KanbanSection } from "@/components/inspection/KanbanSection";
-import { PhotosSection } from "@/components/inspection/PhotosSection";
-import { SignatureSection } from "@/components/inspection/SignatureSection";
+import { InspectionHeader } from "@/features/inspections/components/InspectionHeader";
+import { AnalysisRequestSection } from "@/features/inspections/components/AnalysisRequestSection";
+import { OperatingConditionsSection } from "@/features/inspections/components/OperatingConditionsSection";
+import { DiagnosticoSection } from "@/features/inspections/components/DiagnosticoSection";
+import { ChecklistSectionView } from "@/features/inspections/components/ChecklistSectionView";
+import { KanbanSection } from "@/features/inspections/components/KanbanSection";
+import { PhotosSection } from "@/features/inspections/components/PhotosSection";
+import { SignatureSection } from "@/features/inspections/components/SignatureSection";
 import { getSectionsForEquipment } from "@/data/checklistSections";
 import { ArrowLeft, Save, ChevronRight, Recycle, History } from "lucide-react";
 import { useAuth } from "@/store/AuthContext";
@@ -120,13 +120,13 @@ const InspectionPage = () => {
     <div className="min-h-screen bg-background pt-16">
       <header className="industrial-header px-4 py-3 sticky top-0 z-50">
         <div className="container max-w-4xl mx-auto flex items-center justify-between">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-jd-yellow touch-target">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-primary touch-target">
             <ArrowLeft className="h-5 w-5" />
             <span className="text-sm font-medium hidden sm:inline">Voltar</span>
           </button>
 
           <div className="text-center flex-1 mx-2">
-            <p className="text-sm font-bold text-jd-yellow truncate">
+            <p className="text-sm font-bold text-primary truncate">
               {EQUIPMENT_LABELS[inspection.header.tipoEquipamento as EquipmentType]}
             </p>
             <p className="text-xs text-industrial-dark-foreground/60 truncate">

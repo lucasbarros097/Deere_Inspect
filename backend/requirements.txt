@@ -2,9 +2,11 @@ fastapi==0.109.0
 uvicorn[standard]==0.23.2
 sqlalchemy==2.0.22
 psycopg2-binary==2.9.12
+asyncpg==0.29.0
 python-dotenv==1.0.0
 pydantic-settings
 email-validator
 pyjwt==2.8.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
+slowapi==0.1.9

@@ -183,11 +183,11 @@ const Index = () => {
         <div className="container max-w-4xl mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-jd-yellow p-2 rounded-lg">
+              <div className="bg-primary p-2 rounded-lg">
                 <BookOpenCheck className="h-7 w-7 text-industrial-dark" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-jd-yellow">Análise Técnica</h1>
+                <h1 className="text-xl font-bold text-primary">Análise Técnica</h1>
                 <p className="text-sm text-industrial-dark-foreground/70">
                   Equipamentos Linha Amarela
                 </p>

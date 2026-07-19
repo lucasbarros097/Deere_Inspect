@@ -25,29 +25,18 @@ export const AnalysisRequestSection = ({ data, onChange }: Props) => {
     <div className="space-y-4">
       <h2 className="text-lg font-bold text-foreground">Solicitação de Análise</h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="flex flex-wrap gap-2">
         {CHECKBOXES.map((item) => (
           <button
             key={item.key}
             onClick={() => toggle(item.key)}
-            className={`flex items-center gap-3 p-4 rounded-lg border-2 touch-target text-left transition-colors ${
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors border touch-target ${
               data[item.key]
-                ? "border-primary bg-primary/10"
-                : "border-border bg-card"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
             }`}
           >
-            <div
-              className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                data[item.key] ? "border-primary bg-primary" : "border-muted-foreground"
-              }`}
-            >
-              {data[item.key] && (
-                <svg className="w-4 h-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </div>
-            <span className="font-medium text-foreground">{item.label}</span>
+            {item.label}
           </button>
         ))}
       </div>

@@ -48,7 +48,7 @@ const AppRoutes = () => {
 
   // Pages where Navbar should NOT be shown
   const hideNavbarPaths = ["/login", "/setup", "/trocar-senha"];
-  const showNavbar = isAuthenticated && !hideNavbarPaths.includes(location.pathname);
+  const showNavbar = !hideNavbarPaths.includes(location.pathname);
 
   return (
     <>
@@ -60,7 +60,7 @@ const AppRoutes = () => {
           <Route path="/setup" element={<SetupAdmin />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/trocar-senha" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
-          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/" element={<Home />} />
           <Route path="/sobre-nos" element={<ProtectedRoute><SobreNos /></ProtectedRoute>} />
           <Route path="/ferramentas" element={<ProtectedRoute><Ferramentas /></ProtectedRoute>} />
           <Route path="/ferramentas/analise-tecnica" element={<ProtectedRoute><Index /></ProtectedRoute>} />
