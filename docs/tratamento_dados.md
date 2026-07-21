@@ -11,31 +11,36 @@ Este documento descreve as diretrizes de privacidade, retenção de dados, fluxo
 
 ```mermaid
 flowchart LR
+    A["👤 Client<br/>Interface Web e Mobile"]
+    B["⚙️ Backend Deere Inspect<br/>FastAPI Stateless"]
+    C["🔀 OpenRouter Proxy<br/>No Logging Default"]
+    D["🤖 Provedor OpenAI<br/>GPT-4o-mini Zero Training"]
+
+    A -->|"🔒 HTTPS / TLS 1.3"| B
+    B -->|"🔑 API Key / Prompt System"| C
+    C -->|"🛡️ Transit Criptografado"| D
+
     classDef client fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#fff
     classDef backend fill:#0f172a,stroke:#22c55e,stroke-width:2px,color:#fff
     classDef proxy fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#fff
     classDef provider fill:#0f172a,stroke:#a855f7,stroke-width:2px,color:#fff
 
-    A["👤 Usuário / Client<br/><code>Interface Web & Mobile</code>"] :::client
-    B["⚙️ Backend Deere Inspect<br/><code>FastAPI (Stateless)</code>"] :::backend
-    C["🔀 OpenRouter Proxy<br/><code>No-Logging Default</code>"] :::proxy
-    D["🤖 Provider OpenAI<br/><code>GPT-4o-mini (Zero-Training)</code>"] :::provider
-
-    A -- "🔒 HTTPS / TLS 1.3" --> B
-    B -- "🔑 API Key / Prompt System" --> C
-    C -- "🛡️ Transit Criptografado" --> D
+    class A client
+    class B backend
+    class C proxy
+    class D provider
 ```
 
 ---
 
 ## 2. 📊 Fluxo e Ciclo de Vida dos Dados
 
-| Etapa | Componente | Tratamento dos Dados | Retenção / Armazenamento | Treinamento de Modelos |
-| :--- | :--- | :--- | :--- | :--- |
-| 1️⃣ **Frontend** | Interface Web/Mobile | Criptografia de canal via TLS 1.3. O estado do chat permanece em memória local (React State). | 🧹 Apagado ao atualizar/fechar a sessão no navegador. | 🚫 N/A |
-| 2️⃣ **Backend** | Endpoint `/chat/ask` (FastAPI) | Recebe o prompt, injeta as diretrizes do sistema e encaminha à API. | ⚡ **0 Dias.** Nenhuma mensagem ou histórico é gravado em disco ou banco de dados. | 🚫 N/A |
-| 3️⃣ **Proxy API** | OpenRouter (`https://openrouter.ai`) | Roteia a chamada de forma transparente ao provedor do modelo de IA. | 🛑 **0 Dias.** Sem registro de mensagens ou prompts (*no logging by default*). | 🔒 **Desativado por Padrão** (*Off by Default*). |
-| 4️⃣ **Provedor IA** | OpenAI API (`gpt-4o-mini`) | Processa a requisição em memória de execução para gerar a resposta. | 🕒 Retenção técnica temporária máxima de até 30 dias exclusiva para auditoria de abusos/segurança. | 🛡️ **Zero Training.** Prompts de API comercial **não** são utilizados para treinamento de IAs. |
+| Etapa               | Componente                           | Tratamento dos Dados                                                                          | Retenção / Armazenamento                                                                           | Treinamento de Modelos                                                                          |
+| :------------------ | :----------------------------------- | :-------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------- |
+| 1️⃣ **Frontend**    | Interface Web/Mobile                 | Criptografia de canal via TLS 1.3. O estado do chat permanece em memória local (React State). | 🧹 Apagado ao atualizar/fechar a sessão no navegador.                                              | 🚫 N/A                                                                                          |
+| 2️⃣ **Backend**     | Endpoint `/chat/ask` (FastAPI)       | Recebe o prompt, injeta as diretrizes do sistema e encaminha à API.                           | ⚡ **0 Dias.** Nenhuma mensagem ou histórico é gravado em disco ou banco de dados.                  | 🚫 N/A                                                                                          |
+| 3️⃣ **Proxy API**   | OpenRouter (`https://openrouter.ai`) | Roteia a chamada de forma transparente ao provedor do modelo de IA.                           | 🛑 **0 Dias.** Sem registro de mensagens ou prompts (*no logging by default*).                     | 🔒 **Desativado por Padrão** (*Off by Default*).                                                |
+| 4️⃣ **Provedor IA** | OpenAI API (`gpt-4o-mini`)           | Processa a requisição em memória de execução para gerar a resposta.                           | 🕒 Retenção técnica temporária máxima de até 30 dias exclusiva para auditoria de abusos/segurança. | 🛡️ **Zero Training.** Prompts de API comercial **não** são utilizados para treinamento de IAs. |
 
 ---
 
