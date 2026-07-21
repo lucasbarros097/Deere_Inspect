@@ -15,9 +15,9 @@ flowchart TD
     C["🔀 OpenRouter Proxy - Sem Registro (No-Logging)"]
     D["🤖 OpenAI API - Zero Training (Sem Treinamento)"]
 
-    A -->|"1. TLS 1.3"| B
-    B -->|"2. API Key"| C
-    C -->|"3. Criptografado"| D
+    A -->|"HTTPS / TLS 1.3"| B
+    B -->|"API Key / Prompt System"| C
+    C -->|"Transit Criptografado"| D
 
     classDef client fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#fff
     classDef backend fill:#0f172a,stroke:#22c55e,stroke-width:2px,color:#fff
