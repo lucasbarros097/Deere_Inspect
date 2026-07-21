@@ -10,15 +10,15 @@ Este documento descreve as diretrizes de privacidade, retenção de dados, fluxo
 ## 1. 🏗️ Arquitetura Visual do Fluxo de Dados
 
 ```mermaid
-flowchart LR
-    A["👤 Client<br/>Interface Web e Mobile"]
-    B["⚙️ Backend Deere Inspect<br/>FastAPI Stateless"]
-    C["🔀 OpenRouter Proxy<br/>No Logging Default"]
-    D["🤖 Provedor OpenAI<br/>GPT-4o-mini Zero Training"]
+flowchart TD
+    A["👤 <b>Client</b><br/>Web e Mobile (Memória Local)"]
+    B["⚙️ <b>Backend FastAPI</b><br/>Stateless (0 Dias de Log)"]
+    C["🔀 <b>OpenRouter Proxy</b><br/>Sem Registro (No-Logging)"]
+    D["🤖 <b>OpenAI API</b><br/>Zero Training (Sem Treinamento)"]
 
-    A -->|"🔒 HTTPS / TLS 1.3"| B
-    B -->|"🔑 API Key / Prompt System"| C
-    C -->|"🛡️ Transit Criptografado"| D
+    A -->|"1. TLS 1.3"| B
+    B -->|"2. API Key"| C
+    C -->|"3. Criptografado"| D
 
     classDef client fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#fff
     classDef backend fill:#0f172a,stroke:#22c55e,stroke-width:2px,color:#fff
