@@ -13,9 +13,21 @@ const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
       setPhase("done");
       onFinish();
     }, duration + 500);
+    const handleSkip = () => {
+      setPhase("done");
+      onFinish();
+    };
+    
+    window.addEventListener("keydown", handleSkip);
+    window.addEventListener("mousedown", handleSkip);
+    window.addEventListener("touchstart", handleSkip);
+
     return () => {
       clearTimeout(moveTimer);
       clearTimeout(fadeTimer);
+      window.removeEventListener("keydown", handleSkip);
+      window.removeEventListener("mousedown", handleSkip);
+      window.removeEventListener("touchstart", handleSkip);
     };
   }, [onFinish, duration]);
 
@@ -23,11 +35,15 @@ const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-background transition-opacity duration-500 ${
+      onClick={() => {
+        setPhase("done");
+        onFinish();
+      }}
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-background cursor-pointer transition-opacity duration-500 ${
         phase === "fadeout" ? "opacity-0" : "opacity-100"
       }`}
     >
-      <div className="relative w-full h-32 overflow-hidden">
+      <div className="relative w-full h-32 overflow-hidden pointer-events-none">
         <div
           className="absolute bottom-2 flex items-end"
           style={{
@@ -55,8 +71,9 @@ const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted-foreground/20 rounded" />
       </div>
 
-      <p className="mt-6 text-lg font-bold text-gradient">Análise Técnica</p>
-      <p className="text-sm text-muted-foreground">Carregando...</p>
+      <p className="mt-6 text-lg font-bold text-gradient pointer-events-none">Análise Técnica</p>
+      <p className="text-sm text-muted-foreground pointer-events-none mb-2">Carregando...</p>
+      <p className="text-xs text-muted-foreground/60 animate-pulse pointer-events-none">(Clique ou aperte qualquer tecla para pular)</p>
 
       <style>{`
         @keyframes tractor-slide {

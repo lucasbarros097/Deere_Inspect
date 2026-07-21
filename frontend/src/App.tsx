@@ -22,6 +22,7 @@ import Ferramentas from "./pages/Ferramentas.tsx";
 import Index from "./pages/Index.tsx";
 import Navbar from "./components/Navbar";
 import SetupAdmin from "./pages/SetupAdmin.tsx";
+import { ChatWidget } from "./features/chat/ChatWidget";
 
 const queryClient = new QueryClient();
 
@@ -54,21 +55,24 @@ const AppRoutes = () => {
     <>
       <NetworkStatusBar />
       {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
-      {showNavbar && <Navbar />}
-      <main className={showNavbar ? "pb-20 md:pb-0" : ""}>
-        <Routes>
+      {!showSplash && showNavbar && <Navbar />}
+      {!showSplash && (
+        <main className={showNavbar ? "pb-20 md:pb-0" : ""}>
+          <Routes>
           <Route path="/setup" element={<SetupAdmin />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/trocar-senha" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
           <Route path="/" element={<Home />} />
-          <Route path="/sobre-nos" element={<ProtectedRoute><SobreNos /></ProtectedRoute>} />
+          <Route path="/sobre-nos" element={<SobreNos />} />
           <Route path="/ferramentas" element={<ProtectedRoute><Ferramentas /></ProtectedRoute>} />
           <Route path="/ferramentas/analise-tecnica" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/ferramentas/analise-tecnica/:id" element={<ProtectedRoute><InspectionPage /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminGate><Admin /></AdminGate></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <ChatWidget />
       </main>
+      )}
     </>
   );
 };

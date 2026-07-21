@@ -10,7 +10,7 @@ from slowapi.errors import RateLimitExceeded
 
 from .config import settings
 from .database import init_db
-from .routers import auth, inspections, users, notifications
+from .routers import auth, inspections, users, notifications, chat
 
 PASSWORD_REGEX = re.compile(
     r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]).{8,}$'
@@ -62,6 +62,7 @@ app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(inspections.router, prefix=settings.api_prefix)
 app.include_router(users.router, prefix=settings.api_prefix)
 app.include_router(notifications.router, prefix=settings.api_prefix)
+app.include_router(chat.router, prefix=settings.api_prefix)
 
 @app.get("/health")
 def health_check():

@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (mustChange) {
       navigate("/trocar-senha");
     } else {
-      navigate("/");
+      navigate("/ferramentas");
     }
   };
 
