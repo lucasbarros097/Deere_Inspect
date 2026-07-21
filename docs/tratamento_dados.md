@@ -2,7 +2,7 @@
 
 Este documento descreve as diretrizes de privacidade, retenção de dados, fluxo de informações e conformidade com a **Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018)** aplicadas ao sistema **Deere Inspect** e ao seu assistente de Inteligência Artificial.
 
-> ℹ️ **Nota de Privacidade:** O assistente virtual do Deere Inspect foi projetado seguindo o princípio de **Privacy by Design** (Privacidade desde a Concepção). Nenhuma mensagem do usuário é retida em banco de dados local ou utilizada para treinamento de inteligências artificiais.
+> **Nota de Privacidade:** O assistente virtual do Deere Inspect foi projetado seguindo o princípio de **Privacy by Design** (Privacidade desde a Concepção). Nenhuma mensagem do usuário é retida em banco de dados local ou utilizada para treinamento de inteligências artificiais.
 
 ---
 
@@ -47,22 +47,29 @@ flowchart TD
 
 Existe uma distinção fundamental entre o uso público de ferramentas de IA (como ChatGPT web gratuito) e a integração via **API Comercial**:
 
-- **Uso de Dados para Treinamento:** De acordo com os termos do OpenRouter e os **OpenAI API Data Usage Terms**, os dados de entrada (*prompts*) e saída (*completions*) trafegados via API comercial **NÃO são utilizados para treinar ou aprimorar modelos de inteligência artificial**.
+### Uso de Dados para Treinamento
+De acordo com os termos do OpenRouter e os **OpenAI API Data Usage Terms**, os dados de entrada (*prompts*) e saída (*completions*) trafegados via API comercial **NÃO são utilizados para treinar ou aprimorar modelos de inteligência artificial**.
 
-- **Privacidade Padrão no OpenRouter (*No Logging*):** O OpenRouter armazena apenas metadados de auditoria e faturamento (timestamp, quantidade de tokens consumidos e identificador do modelo). O recurso de compartilhamento de dados para treinamento em troca de descontos em tokens vem **desativado por padrão** (*Off by Default*).
+### Privacidade Padrão no OpenRouter (No Logging)
+O OpenRouter armazena apenas metadados de auditoria e faturamento (timestamp, quantidade de tokens consumidos e identificador do modelo). O recurso de compartilhamento de dados para treinamento em troca de descontos em tokens vem **desativado por padrão** (*Off by Default*).
 
-- **Links e Fontes da Documentação Oficial:**
-  - 🔗 [OpenRouter Privacy Policy](https://openrouter.ai/privacy)
-  - 🔗 [OpenRouter Provider Data Policies](https://openrouter.ai/docs/provider-routing)
-  - 🔗 [OpenAI Enterprise & API Data Privacy](https://openai.com/enterprise-privacy)
+### Documentação Oficial
+- 🔗 [OpenRouter Privacy Policy](https://openrouter.ai/privacy)
+- 🔗 [OpenRouter Provider Data Policies](https://openrouter.ai/docs/provider-routing)
+- 🔗 [OpenAI Enterprise & API Data Privacy](https://openai.com/enterprise-privacy)
 
 ---
 
 ## 4. ⚖️ Recomendações e Boas Práticas para Usuários (LGPD)
 
-- 📌 **Minimização de Dados:** O assistente utiliza apenas dados financeiros e operacionais genéricos de tabela de preços e custos técnicos de manutenção.
-- 🚫 **Vedação de PII (Dados Pessoais Identificáveis):** É instruído aos usuários que **não insiram dados pessoais sensíveis** (como CPF, RG, dados bancários ou nomes completos de clientes finais) nos campos de prompt do assistente.
-- ⚖️ **Vedação ao Termo "Laudo":** Em estrito cumprimento às normas regulatórias e jurídicas da empresa, o assistente é parametrizado via *System Prompt* para emitir apenas **relatórios técnicos de inspeção** e análises operacionais.
+### Minimização de Dados
+O assistente utiliza apenas dados financeiros e operacionais genéricos de tabela de preços e custos técnicos de manutenção.
+
+### Vedação de PII (Dados Pessoais Identificáveis)
+É instruído aos usuários que **não insiram dados pessoais sensíveis** (como CPF, RG, dados bancários ou nomes completos de clientes finais) nos campos de prompt do assistente.
+
+### Vedação ao Termo "Laudo"
+Em estrito cumprimento às normas regulatórias e jurídicas da empresa, o assistente é parametrizado via *System Prompt* para emitir apenas **relatórios técnicos de inspeção** e análises operacionais.
 
 ---
 
@@ -70,4 +77,4 @@ Existe uma distinção fundamental entre o uso público de ferramentas de IA (co
 
 Caso a governança da empresa exija isolamento total em território nacional ou conformidade de *Zero Data Retention* (ZDR) contratual direto:
 
-> 💡 **Dica de Infraestrutura:** É possível direcionar a variável `base_url` do backend para a **Azure OpenAI Service**, que oferece conformidade nativa ISO/IEC 27018, HIPAA, LGPD e contrato de proteção de dados assinado diretamente com a Microsoft.
+**Dica de Infraestrutura:** É possível direcionar a variável `base_url` do backend para a **Azure OpenAI Service**, que oferece conformidade nativa ISO/IEC 27018, HIPAA, LGPD e contrato de proteção de dados assinado diretamente com a Microsoft.
