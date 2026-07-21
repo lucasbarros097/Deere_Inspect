@@ -1,53 +1,58 @@
 # 🚜 Deere Inspect
 
-**Sistema completo para registro, gerenciamento e compartilhamento de inspeções técnicas (TA) de equipamentos de construção. Desenvolvido com React + Vite + Tailwind CSS (frontend) e Python FastAPI (backend).**
+**Sistema completo para registro, gerenciamento de inspeções técnicas (TA) de equipamentos de construção John Deere. Desenvolvido com React + Vite + Tailwind CSS (frontend) e Python FastAPI (backend).**
 
 ---
 
-## 📋 Funcionalidades
+## 📋 Visão Geral
+
+O Deere Inspect é uma aplicação web progressiva (PWA) offline-first que permite técnicos realizar inspeções detalhadas de equipamentos de construção da linha amarela John Deere. O sistema suporta múltiplos tipos de equipamentos com checklists específicos, geração de relatórios PDF, assinatura digital, e colaboração entre técnicos através de compartilhamento e reciclagem de inspeções.
+
+### Funcionalidades Principais
 
 - **Análise Técnica (TA):** Inspeção detalhada de equipamentos com checklist dinâmico por tipo de máquina
 - **Checklist por equipamento:** Cada tipo de equipamento possui seções e itens específicos
 - **Assinatura digital:** Finalização da inspeção com assinatura do técnico
-- **Kanban:** Avaliação visual dos sistemas do equipamento
-- **Reciclagem:** Reaproveite dados de inspeções anteriores
-- **Histórico de edições:** Rastreabilidade completa de todas as alterações
-- **Notificações:** Sistema de notificações para compartilhamentos e reciclagens
-- **Relatórios PDF:** Geração automática de relatórios profissionais
-- **Fotos:** Captura e anexo de até 30 fotos por inspeção
+- **Kanban:** Avaliação visual dos sistemas do equipamento (aprovado/ressalvas/reprovado)
+- **Reciclagem:** Reaproveite dados de inspeções anteriores para novas inspeções
+- **Histórico de edições:** Rastreabilidade completa de todas as alterações com motivos
+- **Relatórios PDF:** Geração automática de relatórios profissionais com jsPDF
+- **Fotos:** Captura e anexo de até 30 fotos por inspeção com compressão automática
 - **PWA:** Instalável como aplicativo no celular (offline-first)
-- **Tema escuro/claro:** Alternância entre temas
-- **Controle de acesso:** Perfis Administrador e Técnico
+- **Tema escuro/claro:** Alternância entre temas com next-themes
+- **Controle de acesso:** Perfis Administrador e Técnico com permissões diferenciadas
 
 ---
 
-## 🏗️ Estrutura do Projeto
+## 🏗️ Arquitetura do Sistema
+
+### Estrutura de Diretórios
 
 ```
-deere-inspect-pro/
+deere-inspect/
 ├── backend/                    # API Python FastAPI
 │   ├── app/
 │   │   ├── main.py            # Rotas e lógica da API
-│   │   ├── auth.py            # Autenticação JWT
-│   │   ├── config.py          # Configurações
-│   │   ├── crud.py            # Operações no banco
-│   │   ├── database.py        # Conexão com banco
+│   │   ├── auth.py            # Autenticação JWT e criptografia
+│   │   ├── config.py          # Configurações (Pydantic Settings)
+│   │   ├── crud.py            # Operações CRUD no banco de dados
+│   │   ├── database.py        # Conexão e inicialização do banco
 │   │   ├── models.py          # Modelos SQLAlchemy
-│   │   └── schemas.py         # Schemas Pydantic
+│   │   └── schemas.py         # Schemas Pydantic para validação
 │   ├── Dockerfile
 │   └── requirements.txt
 │
 ├── frontend/                   # App React + Vite
 │   ├── src/
 │   │   ├── components/        # Componentes reutilizáveis
-│   │   │   ├── inspection/    # Componentes da inspeção
+│   │   │   ├── inspection/    # Componentes específicos de inspeção
 │   │   │   └── ui/            # Componentes shadcn/ui
 │   │   ├── pages/             # Páginas da aplicação
 │   │   ├── store/             # Contextos (Auth, Inspeções)
 │   │   ├── hooks/             # Hooks customizados
 │   │   ├── lib/               # Utilitários (PDF, API)
 │   │   ├── types/             # Tipos TypeScript
-│   │   └── data/              # Dados de checklist
+│   │   └── data/              # Dados de checklist (seções por equipamento)
 │   ├── public/                # Assets estáticos
 │   ├── index.html
 │   ├── vite.config.ts
@@ -70,11 +75,316 @@ deere-inspect-pro/
 └── README.md
 ```
 
+### Arquitetura Técnica
+
+**Backend (FastAPI):**
+- API RESTful com documentação automática (Swagger/OpenAPI)
+- Autenticação JWT com tokens de 7 dias
+- ORM SQLAlchemy com suporte a PostgreSQL e SQLite
+- Validação de dados com Pydantic
+- Middleware CORS para comunicação com frontend
+- Bloqueio de conta após 5 tentativas falhas de login
+- Expiração de senha a cada 90 dias (técnicos)
+
+**Frontend (React):**
+- Single Page Application com React Router
+- Gerenciamento de estado com Context API
+- TanStack React Query para cache e sincronização de dados
+- shadcn/ui + Radix UI para componentes acessíveis
+- Tailwind CSS para estilização
+- PWA com workbox para offline-first
+- Armazenamento local (localStorage) para dados offline
+- Sincronização automática quando online
+
+**Banco de Dados:**
+- PostgreSQL em produção (Docker)
+- SQLite para desenvolvimento local
+- Modelos relacionais com campos JSON para dados flexíveis
+
 ---
 
-## 🚀 Como subir o sistema do zero
+## 📊 Modelos de Dados
 
-### ⚠️ Importante: Segurança e Dados Sensíveis
+### Backend (SQLAlchemy Models)
+
+**Inspection** - Representa uma inspeção técnica completa:
+- `id`: String (UUID) - Identificador único
+- `created_by`: String - Username do criador
+- `created_at/updated_at`: DateTime - Timestamps
+- `status`: String - "em-andamento" ou "finalizada"
+- `header`: JSON - Dados do cabeçalho (cliente, equipamento, etc.)
+- `analysis_request`: JSON - Solicitação de análise (falha, garantia, etc.)
+- `operating_conditions`: JSON - Condições de operação
+- `diagnostico`: JSON - Diagnóstico eletrônico
+- `checklist_data`: JSON - Checklist organizado por seções
+- `kanban`: JSON - Avaliação dos sistemas
+- `fotos`: JSON - Array de fotos
+- `assinatura_tecnico`: String - Assinatura digital (base64)
+- `shared_with`: JSON - Array de usernames com acesso
+- `recycled_from`: String - ID da inspeção original (se reciclada)
+- `recycled_by`: String - Username de quem reciclou
+- `recycled_at`: BigInteger - Timestamp da reciclagem
+
+**InspectionEdit** - Histórico de edições:
+- `id`: String (UUID)
+- `inspection_id`: String - Referência para a inspeção
+- `edited_by`: String - Username do editor
+- `edited_at`: BigInteger - Timestamp Unix
+- `field_changed`: String - Campo modificado
+- `old_value/new_value`: Text - Valores em JSON
+- `edit_reason`: String - Motivo da edição
+
+**Notification** - Sistema de notificações:
+- `id`: String (UUID)
+- `user_id`: String - UID do destinatário
+- `type`: String - Tipo (inspection_shared, inspection_recycled, etc.)
+- `title/message`: String - Conteúdo
+- `related_inspection_id`: String - Referência opcional
+- `related_user`: String - Usuário relacionado
+- `read`: Boolean - Status de leitura
+- `created_at`: BigInteger - Timestamp Unix
+
+**User** - Usuários do sistema:
+- `uid`: String (UUID) - Identificador único
+- `username`: String - Username único
+- `role`: String - "admin" ou "user"
+- `ativo`: Boolean - Status da conta
+- `criado_em`: BigInteger - Timestamp de criação
+- `password_hash`: String - Hash bcrypt
+- `must_change_password`: Boolean - Forçar troca no primeiro login
+- `password_changed_at`: BigInteger - Timestamp da última troca
+- `failed_attempts`: Integer - Tentativas falhas
+- `locked_until`: BigInteger - Timestamp de desbloqueio
+
+**Counter** - Contadores sequenciais:
+- `name`: String - Nome do contador (ex: "rastreabilidade")
+- `last_value`: BigInteger - Último valor usado
+
+### Frontend (TypeScript Types)
+
+**InspectionHeader** - Dados iniciais da inspeção:
+```typescript
+{
+  cliente: string;
+  tipoEquipamento: EquipmentType;  // "pa-carregadeira" | "motoniveladora" | ...
+  marcaModelo: string;
+  ano: string;
+  numeroOs: string;
+  rastreabilidade: number;
+  numeroSerie: string;
+  horimetro: string;
+  localInspecao: string;
+  aplicacao: string;
+  tecnicoResponsavel: string;
+  data: string;
+  orcamento: "sim" | "nao" | "";
+}
+```
+
+**AnalysisRequest** - Motivos da análise:
+```typescript
+{
+  falhaFuncional: boolean;
+  quebraComponente: boolean;
+  analiseGarantia: boolean;
+  analisePreventiva: boolean;
+  tradeIn: boolean;
+  reforma: boolean;
+  sinistro: boolean;
+  outros: boolean;
+  descricaoReclamacao: string;
+}
+```
+
+**OperatingConditions** - Condições de operação:
+```typescript
+{
+  tipoAplicacao: string[];
+  materialManuseado: string;
+  condicoesAmbientais: string;
+  operadorTreinado: "sim" | "nao" | "";
+  planoManutencao: "sim" | "nao" | "";
+}
+```
+
+**DiagnosticoEletronico** - Diagnóstico:
+```typescript
+{
+  ferramentasUtilizadas: string;
+  manualPerformance: string;
+  codigosAtivos: "sim" | "nao" | "";
+  codigosPresentes: string;
+}
+```
+
+**ChecklistItem** - Item do checklist:
+```typescript
+{
+  id: string;
+  grupo?: string;
+  descricao: string;
+  medida: string;
+  medidaReferencia: string;
+  tempo: string;
+  observacao: string;
+}
+```
+
+**KanbanItem** - Avaliação de sistema:
+```typescript
+{
+  sistemaId: string;
+  sistemaNome: string;
+  avaliacao: "aprovado" | "ressalvas" | "reprovado" | "";
+}
+```
+
+**InspectionPhoto** - Foto da inspeção:
+```typescript
+{
+  id: string;
+  url: string;  // base64
+  observacao: string;
+  titulo: string;
+}
+```
+
+---
+
+## 🔌 API Endpoints
+
+### Autenticação
+
+**POST /api/login**
+- Descrição: Autentica usuário e retorna token JWT
+- Request: `{ username: string, password: string }`
+- Response: `{ access_token: string, token_type: string, must_change_password: boolean, username: string }`
+- Features: Bloqueio após 5 tentativas, validação de senha forte
+
+**GET /api/me**
+- Descrição: Retorna informações do usuário autenticado
+- Response: `{ uid: string, username: string, role: string, must_change_password: boolean }`
+- Auth: Requer token JWT
+
+**POST /api/change-password**
+- Descrição: Altera senha do usuário
+- Request: `{ current_password: string, new_password: string }`
+- Auth: Requer token JWT
+- Validação: Senha deve ter 8+ caracteres, maiúscula, minúscula, número e especial
+
+### Inspeções
+
+**GET /api/inspections**
+- Descrição: Retorna inspeções do usuário (criadas + compartilhadas)
+- Response: `InspectionResponse[]`
+- Auth: Requer token JWT
+
+**GET /api/inspections/all**
+- Descrição: Retorna TODAS as inspeções (apenas admin)
+- Response: `InspectionResponse[]`
+- Auth: Requer token JWT + role admin
+
+**GET /api/inspections/{inspection_id}**
+- Descrição: Retorna inspeção específica
+- Response: `InspectionResponse`
+- Auth: Requer token JWT + permissão (criador, compartilhado ou admin)
+
+**POST /api/inspections**
+- Descrição: Cria nova inspeção
+- Request: `InspectionCreate`
+- Response: `InspectionResponse`
+- Auth: Requer token JWT
+
+**PUT /api/inspections/{inspection_id}**
+- Descrição: Atualiza inspeção existente
+- Request: `InspectionUpdate` (campos opcionais + edit_reason)
+- Response: `InspectionResponse`
+- Auth: Requer token JWT + permissão
+- Restrição: Não pode editar inspeção finalizada se não for o criador
+
+**DELETE /api/inspections/{inspection_id}**
+- Descrição: Deleta inspeção
+- Auth: Requer token JWT + ser o criador
+
+### Reciclagem
+
+**POST /api/inspections/{inspection_id}/recycle**
+- Descrição: Recicla inspeção criando cópia com campos selecionados
+- Request: `{ fields_to_keep: string[] }` - ["header", "fotos", "diagnostico", etc.]
+- Response: `{ id: string, detail: string }`
+- Auth: Requer token JWT + permissão
+- Notificação: Cria notificação para o criador original se for compartilhada
+
+### Histórico de Edições
+
+**GET /api/inspections/{inspection_id}/edits**
+- Descrição: Retorna histórico de edições da inspeção
+- Response: `InspectionEditLog[]`
+- Auth: Requer token JWT + permissão
+
+### Notificações
+
+**GET /api/notifications**
+- Descrição: Retorna notificações do usuário
+- Response: `NotificationResponse[]`
+- Auth: Requer token JWT
+
+**PUT /api/notifications/{notification_id}/read**
+- Descrição: Marca notificação como lida
+- Auth: Requer token JWT + ser o destinatário
+
+### Utilitários
+
+**GET /api/next-rastreabilidade**
+- Descrição: Retorna próximo número de rastreabilidade sequencial
+- Response: `{ next_rastreabilidade: number }`
+- Auth: Requer token JWT
+
+### Administração
+
+**GET /api/users**
+- Descrição: Retorna todos os usuários (apenas admin)
+- Response: `UserResponse[]`
+- Auth: Requer token JWT + role admin
+
+**POST /api/users**
+- Descrição: Cria novo usuário (apenas admin)
+- Request: `UserCreate`
+- Response: `UserResponse`
+- Auth: Requer token JWT + role admin
+
+**PUT /api/users/{uid}**
+- Descrição: Atualiza usuário (apenas admin)
+- Request: `UserUpdate`
+- Response: `UserResponse`
+- Auth: Requer token JWT + role admin
+
+### Setup Inicial
+
+**GET /api/setup/needs**
+- Descrição: Verifica se o sistema precisa de setup inicial (banco vazio)
+- Response: `{ needs_setup: boolean }`
+- Auth: Não requer autenticação
+
+**POST /api/setup/admin**
+- Descrição: Cria primeiro administrador (apenas quando banco vazio)
+- Request: `UserCreate`
+- Response: `UserResponse`
+- Auth: Não requer autenticação
+- Restrição: Só funciona quando não há usuários no banco
+
+---
+
+## 🚀 Instalação e Deploy
+
+### Pré-requisitos
+
+- **Docker** e **Docker Compose** instalados (para produção)
+- **Node.js 18+** (para desenvolvimento local)
+- **Python 3.12+** (para desenvolvimento local)
+- Scripts Windows na pasta `build/` (para usuários Windows)
+
+### ⚠️ Segurança e Dados Sensíveis
 
 Antes de fazer o deploy em produção ou ambientes de teste:
 
@@ -87,9 +397,9 @@ Antes de fazer o deploy em produção ou ambientes de teste:
    - Backups de banco (`*.sql`, `*.dump`)
    - Arquivos de banco local (`*.db`, `*.sqlite`)
 
-### 🛡️ Configuração para Ambientes Novos
+### Configuração Inicial
 
-Ao subir em um servidor ou máquina de teste nova, o sistema funcionará da seguinte forma:
+Ao subir em um servidor ou máquina nova, o sistema funcionará da seguinte forma:
 
 1. **Primeiro acesso (banco zerado):**
    - O sistema detecta que não há usuários no banco
@@ -102,205 +412,235 @@ Ao subir em um servidor ou máquina de teste nova, o sistema funcionará da segu
    - Faça login com as credenciais existentes
    - O admin pode criar outros usuários técnicos via painel admin
 
-### Setup de Segurança para Produção
-
-Para ambientes de produção, altere estas variáveis no `.env`:
-
-```env
-# Use uma senha forte para o banco de dados
-POSTGRES_PASSWORD=sua_senha_muito_forte_aqui
-
-# Gere um SECRET_KEY aleatório e longo
-SECRET_KEY=use_uma_string_longa_aleatoria_gerada_por_um_password_manager
-
-# Use credenciais fortes para o admin
-ADMIN_USERNAME=seu_usuario_admin
-ADMIN_PASSWORD=sua_senha_muito_forte_aqui
-```
-
-### Pré-requisitos
-
-- **Docker** e **Docker Compose** instalados (para produção)
-- **Node.js 18+** (para desenvolvimento local)
-- **Python 3.12+** (para desenvolvimento local)
-- Scripts Windows na pasta `build/` (para usuários Windows)
-
-### 1. Clone o repositório
+### Instalação com Docker (Produção)
 
 ```bash
+# Clone o repositório
 git clone https://github.com/lucasbarros097/deere_inspect_pro.git
 cd deere-inspect-pro
-```
 
-### 2. Configure as variáveis de ambiente
-
-```bash
+# Configure as variáveis de ambiente
 cp .env.example .env
-```
+# Edite .env com suas credenciais
 
-Edite o arquivo `.env` conforme necessário:
-
-```env
-# Banco de Dados
-POSTGRES_DB=deere_inspect
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-
-# Backend
-DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/deere_inspect
-SECRET_KEY=seu-segredo-aqui-mude-em-producao
-API_PREFIX=/api
-APP_NAME=Deere Inspect API
-ACCESS_TOKEN_EXPIRE_MINUTES=10080
-
-# Usuário Admin (criado automaticamente na primeira execução)
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin123
-
-# Frontend
-VITE_API_URL=http://localhost:8000
-```
-
-**IMPORTANTE:** Em produção, altere as senhas e o SECRET_KEY para valores seguros.
-
-### 3. Suba com Docker (produção/recomendado)
-
-```bash
+# Suba os containers
 docker-compose up -d --build
 ```
 
-Isso irá:
-- Buildar a imagem do frontend (Nginx servindo arquivos estáticos)
-- Buildar a imagem do backend (FastAPI + Uvicorn)
-- Subir o banco PostgreSQL
-- Aplicar migrações automaticamente
-
 Acesse: **http://localhost:8080**
 
-### 4. Configuração Inicial Automática
+### Desenvolvimento Local
 
-Na primeira execução (banco de dados vazio), o sistema irá:
-
-1. **Detectar banco vazio** e redirecionar para a tela de configuração inicial
-2. **Exibir tela de setup** (`/setup`) para criar o primeiro administrador
-3. **Criar usuário admin** com as credenciais definidas no `.env` (`ADMIN_USERNAME` / `ADMIN_PASSWORD`)
-4. **Redirecionar para login** após criação bem-sucedida
-
-**Observação:** O sistema também permite criar o admin manualmente através da tela de setup, ignorando as credenciais do `.env`.
-
-> **Nota:** O administrador é criado apenas na primeira execução. Se você usar `docker-compose down` (sem `-v`), os dados são preservados e o admin não será recriado. Use `docker-compose down -v` apenas se quiser resetar completamente o banco de dados.
-
-### 5. Desenvolvimento local
-
-#### Backend
-
+**Backend:**
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-#### Frontend
-
+**Frontend:**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-O frontend estará em **http://localhost:8080** e o backend em **http://localhost:8000**.
+O frontend estará em **http://localhost:5173** e o backend em **http://localhost:8000**.
 
-#### Windows
+### Windows (Scripts Automatizados)
 
-Para usuários Windows, o projeto inclui scripts automatizados na pasta `build/` para facilitar todas as operações:
+Para usuários Windows, scripts disponíveis na pasta `build/`:
 
 | Script | Descrição |
 |--------|-----------|
-| `build/start_backend.bat` | Inicia o backend em modo desenvolvimento |
-| `build/start_frontend.bat` | Inicia o frontend em modo desenvolvimento |
-| `build/start_frontend_preview.bat` | Inicia o frontend buildado (preview) |
-| `build/build_frontend.bat` | Faz o build de produção do frontend |
-| `build/build_backend.bat` | Cria executável do backend |
-| `build/build_all.bat` | Faz build completo (frontend + backend) |
-| `build/create_portable.bat` | Cria pacote portátil para distribuição |
+| `start_backend.bat` | Inicia o backend em modo desenvolvimento |
+| `start_frontend.bat` | Inicia o frontend em modo desenvolvimento |
+| `build_frontend.bat` | Faz o build de produção do frontend |
+| `build_backend.bat` | Cria executável do backend |
+| `build_all.bat` | Faz build completo (frontend + backend) |
+| `create_portable.bat` | Cria pacote portátil para distribuição |
 
-##### Como Rodar no Windows
-
-**Iniciar Backend:**
-```cmd
-cd build
-start_backend.bat
-```
-
-**Iniciar Frontend:**
-```cmd
-cd build
-start_frontend.bat
-```
-
-**Build Completo:**
-```cmd
-cd build
-build_all.bat
-```
-
-**Criar Pacote Portátil:**
-```cmd
-cd build
-create_portable.bat
-```
-
-##### Configuração Windows
-
-Para desenvolvimento local no Windows sem Docker, você pode configurar o `.env` para usar SQLite (mais simples que PostgreSQL):
-
+**Configuração Windows:** Para desenvolvimento local sem Docker, configure o `.env` para usar SQLite:
 ```
 DATABASE_URL=sqlite:///./deere_inspect.db
 ```
 
-Para produção ou ambiente Docker, mantenha a configuração PostgreSQL padrão no `.env`.
+---
 
-##### Build e Distribuição
+## 🔄 Fluxo de Trabalho das Inspeções
 
-**Build do Frontend:**
-```cmd
-cd build
-build_frontend.bat
-```
+### 1. Criação da Inspeção
 
-**Build do Backend (executável):**
-```cmd
-cd build
-build_backend.bat
-```
+O técnico seleciona o tipo de equipamento:
+- Pá Carregadeira
+- Motoniveladora
+- Escavadeira
+- Retroescavadeira
+- Trator de Esteira
 
-**Build Completo:**
-```cmd
-cd build
-build_all.bat
-```
+O sistema gera automaticamente:
+- Novo ID de inspeção
+- Número de rastreabilidade sequencial
+- Checklist específico para o tipo de equipamento
+- Estrutura de Kanban para avaliação dos sistemas
+- 30 slots para fotos
 
-**Distribuição:**
-```cmd
-cd build
-create_portable.bat
-```
+### 2. Preenchimento dos Dados
 
-Isso cria uma pasta `Deere_Inspect_Portable/` com tudo pronto para distribuição, incluindo:
-- Executável do backend
-- Frontend buildado
-- Arquivo de configuração
-- Instruções para usuário final
-- Script de início automático
+**Header:**
+- Cliente, O.S., equipamento, marca/modelo, ano
+- Número de série, horímetro, local da inspeção
+- Técnico responsável, data, orçamento
 
-##### Solução de Problemas Windows
+**Solicitação de Análise:**
+- Seleção de motivos (falha funcional, garantia, preventiva, etc.)
+- Descrição da reclamação
 
-- **Permissões:** Execute o terminal como Administrador se tiver problemas
-- **Venv:** Se o ambiente virtual não funcionar, recrie com `python -m venv .venv` na pasta backend
-- **Portas:** Altere as portas se 8000 ou 8080 estiverem em uso
-- **Dependências:** Limpe `node_modules` e reinstale se tiver problemas no frontend
+**Condições de Operação:**
+- Tipo de aplicação, material manuseado
+- Condições ambientais, operador treinado
+- Plano de manutenção
+
+**Diagnóstico Eletrônico:**
+- Ferramentas utilizadas (SERVICE ADVISOR)
+- Manual de performance
+- Códigos ativos e presentes
+
+### 3. Checklist por Sistema
+
+Cada equipamento possui seções específicas (ex: motor, transmissão, hidráulica). Para cada item:
+- Descrição do componente
+- Medida atual
+- Medida de referência
+- Tempo de verificação
+- Observações
+
+### 4. Avaliação Kanban
+
+Para cada sistema do equipamento:
+- **Aprovado:** Sistema em conformidade
+- **Aprovado com Ressalvas:** Sistema funcional com observações
+- **Reprovado:** Sistema necessita reparo
+
+### 5. Registro Fotográfico
+
+- Até 30 fotos por inspeção
+- Compressão automática (JPEG, 80% qualidade)
+- Redimensionamento (máx 1920px)
+- Título e observação para cada foto
+
+### 6. Assinatura Digital
+
+- Assinatura do técnico em canvas digital
+- Convertida para base64 e armazenada
+- Obrigatória para finalização
+
+### 7. Finalização e PDF
+
+- Status muda para "finalizada"
+- Geração automática de relatório PDF
+- PDF inclui todos os dados, checklist, kanban, fotos e assinatura
+- Nome do arquivo: `Inspecao_{cliente}_T{rastreabilidade}_OS-{os}_{data}.pdf`
+
+### 8. Reciclagem (Opcional)
+
+Permite criar nova inspeção baseada em uma existente:
+- Selecionar campos a manter (header, fotos, diagnóstico, etc.)
+- Rastreabilidade é resetada
+- Assinatura é removida
+- Notificação enviada ao criador original (se compartilhada)
+
+---
+
+## 🔐 Segurança e Permissões
+
+### Perfis de Usuário
+
+**Administrador:**
+- Acesso total ao sistema
+- Pode criar/editar/deletar usuários
+- Visualiza todas as inspeções de todos os técnicos
+- Acesso ao painel administrativo
+- Não é forçado a trocar senha no primeiro login
+
+**Técnico:**
+- Cria e gerencia próprias inspeções
+- Pode reciclar inspeções compartilhadas
+- Forçado a trocar senha no primeiro login
+- Senha expira a cada 90 dias
+- Apenas visualiza suas inspeções
+
+### Política de Senhas
+
+**Requisitos:**
+- Mínimo 8 caracteres
+- Pelo menos uma letra maiúscula
+- Pelo menos uma letra minúscula
+- Pelo menos um número
+- Pelo menos um caractere especial (!@#$%...)
+
+**Segurança:**
+- Hash com bcrypt
+- Bloqueio após 5 tentativas falhas (15 minutos)
+- Expiração a cada 90 dias (técnicos)
+- Token JWT válido por 7 dias
+
+### Controle de Acesso
+
+**Inspeções:**
+- Técnicos só veem suas próprias inspeções
+- Admins veem todas as inspeções
+- Edição permitida apenas para criador
+- Inspeções finalizadas não podem ser editadas (exceto pelo criador)
+
+**Endpoints:**
+- Todos os endpoints protegidos com JWT (exceto setup)
+- Verificação de role para endpoints admin
+- Validação de propriedade para operações em inspeções
+
+---
+
+## 🛠️ Stack Tecnológica
+
+### Frontend
+- **React 18** + TypeScript
+- **Vite 5** (bundler)
+- **Tailwind CSS 3** + shadcn/ui
+- **React Router DOM 6**
+- **TanStack React Query 5**
+- **Lucide React** (ícones)
+- **jsPDF** (geração de relatórios)
+- **PWA** (instalável offline)
+
+### Backend
+- **Python 3.12** + FastAPI
+- **SQLAlchemy** (ORM)
+- **PostgreSQL** (banco de dados)
+- **JWT** (autenticação)
+- **Uvicorn** (servidor ASGI)
+
+### Infraestrutura
+- **Docker** + Docker Compose
+- **Nginx** (servidor web)
+- **PWA** (Service Worker + Workbox)
+
+---
+
+## 📸 Limitações de Imagens
+
+O sistema possui as seguintes limitações para upload de imagens no registro fotográfico:
+
+| Item | Limite |
+|------|--------|
+| **Quantidade máxima** | 30 fotos por inspeção |
+| **Tamanho máximo por imagem** | 10 MB |
+| **Dimensão máxima** | 1920px (redimensionamento automático) |
+| **Qualidade de compressão** | 80% (JPEG) |
+| **Formatos aceitos** | JPEG, PNG, WebP, HEIC |
+
+As imagens são automaticamente redimensionadas e comprimidas para otimizar o armazenamento e garantir performance. A imagem original é preservada para download.
 
 ---
 
@@ -337,282 +677,12 @@ docker-compose up -d --build
 
 ---
 
-## 📸 Limitações de Imagens
-
-O sistema possui as seguintes limitações para upload de imagens no registro fotográfico:
-
-| Item | Limite |
-|------|--------|
-| **Quantidade máxima** | 10 fotos por inspeção |
-| **Tamanho máximo por imagem** | 10 MB |
-| **Dimensão máxima** | 1920px (redimensionamento automático) |
-| **Qualidade de compressão** | 80% (JPEG) |
-| **Formatos aceitos** | JPEG, PNG, WebP, HEIC |
-
-As imagens são automaticamente redimensionadas e comprimidas para otimizar o armazenamento e garantir performance. A imagem original é preservada para download.
-
----
-
-## 👥 Perfis de Acesso
-
-| Perfil | Acesso |
-|--------|--------|
-| **Administrador** | Acesso total: criar/gerenciar usuários, ver todas as inspeções de todos os técnicos, painel admin |
-| **Técnico** | Criar e gerenciar próprias inspeções, reciclar |
-
-- Administradores **não** são forçados a trocar senha no primeiro login
-- Técnicos são forçados a trocar senha no primeiro login (segurança)
-
----
-
 ## 🧪 Testes
 
 ```bash
 cd frontend
 npm test
 ```
-
----
-
-## 🛠️ Stack Tecnológica
-
-### Frontend
-- **React 18** + TypeScript
-- **Vite 5** (bundler)
-- **Tailwind CSS 3** + shadcn/ui
-- **React Router DOM 6**
-- **TanStack React Query 5**
-- **Lucide React** (ícones)
-- **jsPDF** (geração de relatórios)
-- **PWA** (instalável offline)
-
-### Backend
-- **Python 3.12** + FastAPI
-- **SQLAlchemy** (ORM)
-- **PostgreSQL** (banco de dados)
-- **JWT** (autenticação)
-- **Uvicorn** (servidor ASGI)
-
-### Infraestrutura
-- **Docker** + Docker Compose
-- **Nginx** (servidor web)
-- **PWA** (Service Worker + Workbox)
-
----
-
-## 🚀 Guia de Deploy e Segurança
-
-### ⚠️ Checklist de Segurança para Deploy
-
-#### Antes de fazer deploy em produção ou ambientes de teste:
-
-1. **NUNCA commitar o arquivo `.env`**
-   - O `.env` contém credenciais sensíveis
-   - Use `.env.example` como template
-   - Cada ambiente deve ter seu próprio `.env`
-
-2. **Dados que NUNCA devem ser commitados:**
-   - ✅ `.env` (já está no .gitignore)
-   - ✅ `data/` (banco de dados local)
-   - ✅ `*.log` (arquivos de log)
-   - ✅ `*.sql`, `*.dump` (backups de banco)
-   - ✅ `*.db`, `*.sqlite` (arquivos de banco local)
-   - ✅ `build/` (artefatos de build)
-
-3. **Configurações obrigatórias para produção:**
-   - Alterar `POSTGRES_PASSWORD` para senha forte
-   - Alterar `SECRET_KEY` para string longa e aleatória
-   - Alterar `ADMIN_USERNAME` e `ADMIN_PASSWORD` para credenciais fortes
-   - Alterar `VITE_API_URL` para o domínio correto do servidor
-
-### 🛡️ Configuração de Ambiente
-
-#### 1. Ambiente de Desenvolvimento
-
-Use as configurações padrão do `.env.example`:
-```env
-POSTGRES_PASSWORD=postgres
-SECRET_KEY=chave_de_desenvolvimento_nao_usar_em_producao
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin123
-```
-
-#### 2. Ambiente de Teste
-
-Use credenciais diferentes de desenvolvimento:
-```env
-POSTGRES_PASSWORD=test_senha_forte_aqui
-SECRET_KEY=gerar_uma_chave_aleatoria_longa_aqui
-ADMIN_USERNAME=test_admin
-ADMIN_PASSWORD=test_senha_muito_forte_aqui
-```
-
-#### 3. Ambiente de Produção
-
-Use credenciais fortes e únicas:
-```env
-POSTGRES_PASSWORD=<senha_gerada_por_password_manager>
-SECRET_KEY=<string_aleatoria_64_caracteres_ou_mais>
-ADMIN_USERNAME=<usuario_admin_real>
-ADMIN_PASSWORD=<senha_gerada_por_password_manager>
-```
-
-### 🌐 Primeiro Acesso em Ambiente Novo
-
-#### Fluxo Automático de Configuração
-
-Ao subir o sistema em um servidor ou máquina nova:
-
-1. **Início:** Sistema detecta banco vazio
-2. **Redirecionamento:** Usuário é redirecionado para `/setup`
-3. **Tela de Setup:** Interface para criar primeiro admin
-4. **Criação de Admin:** Sistema cria usuário administrador
-5. **Login:** Usuário é redirecionado para tela de login
-6. **Funcionamento Normal:** Sistema opera normalmente
-
-#### Opções de Criação do Admin
-
-**Opção 1: Criação Automática (via .env)**
-- Defina `ADMIN_USERNAME` e `ADMIN_PASSWORD` no `.env`
-- Sistema cria automaticamente no primeiro startup
-- Recomendado para automação de deploy
-
-**Opção 2: Criação Manual (via Interface)**
-- Acesse a tela `/setup` no primeiro acesso
-- Insira as credenciais desejadas
-- Sistema cria admin manualmente
-- Recomendado para setups manuais
-
-### 🔄 Procedimento de Deploy
-
-#### Deploy em Servidor Novo
-
-1. **Clone o repositório:**
-   ```bash
-   git clone <seu-repositorio>
-   cd deere_inspect
-   ```
-
-2. **Crie o arquivo .env:**
-   ```bash
-   cp .env.example .env
-   # Edite .env com as credenciais apropriadas
-   ```
-
-3. **Suba os containers:**
-   ```bash
-   docker-compose up -d --build
-   ```
-
-4. **Acesse o sistema:**
-   - Abra `http://seu-servidor:8080`
-   - Será redirecionado para `/setup` automaticamente
-   - Crie o primeiro administrador
-   - Faça login e configure os usuários técnicos
-
-#### Atualização de Sistema Existente
-
-1. **Atualize o código:**
-   ```bash
-   git pull origin main
-   ```
-
-2. **Rebuild os containers:**
-   ```bash
-   docker-compose down
-   docker-compose up -d --build
-   ```
-
-3. **Verifique funcionamento:**
-   - Acesse o sistema
-   - Verifique se as funcionalidades estão operacionais
-
-### 🗄️ Backup e Restore
-
-#### Backup do Banco de Dados
-
-```bash
-docker exec -t deere_inspect-db-1 pg_dump -U postgres deere_inspect > backup_$(date +%Y%m%d).sql
-```
-
-#### Restore do Banco de Dados
-
-```bash
-cat backup.sql | docker exec -i deere_inspect-db-1 psql -U postgres deere_inspect
-```
-
-### 🔒 Reset Completo do Sistema
-
-Para resetar completamente o sistema (incluindo banco de dados):
-
-```bash
-docker-compose down -v
-# Remove a pasta data/ local se existir
-rm -rf data/
-# Suba novamente
-docker-compose up -d --build
-```
-
-**⚠️ ATENÇÃO:** Isso apagará todos os dados permanentemente!
-
-### 📊 Monitoramento e Logs
-
-#### Verificar status dos containers:
-```bash
-docker-compose ps
-```
-
-#### Verificar logs do backend:
-```bash
-docker-compose logs backend
-```
-
-#### Verificar logs do banco:
-```bash
-docker-compose logs db
-```
-
-#### Verificar logs do frontend:
-```bash
-docker-compose logs web
-```
-
-### 🚨 Solução de Problemas
-
-#### Sistema não inicia: Banco não conecta
-
-**Solução:** O backend agora tem retry automático (30 tentativas). Se ainda falhar:
-1. Verifique se o container do banco está rodando: `docker-compose ps`
-2. Verifique logs do banco: `docker-compose logs db`
-3. Limpe dados antigos: `docker-compose down -v && rm -rf data/`
-
-#### Tela de setup não aparece
-
-**Causa:** O banco já possui usuários
-**Solução:** 
-1. Use `docker-compose down -v && rm -rf data/` para limpar o banco
-2. Suba novamente: `docker-compose up -d --build`
-3. A tela de setup aparecerá
-
-#### Erro de conexão do frontend
-
-**Causa:** `VITE_API_URL` incorreto no `.env`
-**Solução:**
-1. Verifique se `VITE_API_URL` está correto no `.env`
-2. Rebuild o container web: `docker-compose up -d --build web`
-
-### 📝 Checklist Final de Deploy
-
-- [ ] `.env` criado com credenciais fortes
-- [ ] `.env` NÃO está no git
-- [ ] `data/` está no .gitignore
-- [ ] Credenciais de produção diferentes de desenvolvimento
-- [ ] `SECRET_KEY` foi alterado para valor aleatório
-- [ ] Senhas do banco de dados foram alteradas
-- [ ] Backup do banco de dados foi configurado
-- [ ] Monitoramento foi configurado
-- [ ] Primeiro acesso foi testado (tela de setup)
-- [ ] Funcionalidades básicas foram testadas
 
 ---
 
